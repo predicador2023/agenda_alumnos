@@ -70,7 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
     await fetch(`/api/ingresos/${idEditando}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ alumno_id: alumnoId, tipo, monto, fecha, observacion })
+      body: JSON.stringify({ alumno_id: alumno_id, tipo, monto, fecha, observacion })
     });
     idEditando = null;
   } else {
