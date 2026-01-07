@@ -65,23 +65,23 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  async function guardarIngreso(nombre, tipo, monto, fecha) {
-    if (idEditando) {
-      await fetch(`/api/ingresos/${idEditando}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ alumno: nombre, tipo, monto, fecha })
-      });
-      idEditando = null;
-    } else {
-      await fetch('/api/ingresos', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ alumno: nombre, tipo, monto, fecha })
-      });
-    }
-    await cargarIngresos();
+  async function guardarIngreso(alumnoId, tipo, monto, fecha, observacion) {
+  if (idEditando) {
+    await fetch(`/api/ingresos/${idEditando}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ alumno_id: alumnoId, tipo, monto, fecha, observacion })
+    });
+    idEditando = null;
+  } else {
+    await fetch('/api/ingresos', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ alumno_id: alumnoId, tipo, monto, fecha, observacion })
+    });
   }
+  await cargarIngresos();
+}
 
   // --- Botón: ver mes actual ---
   btnMesActual.addEventListener('click', () => {
