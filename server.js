@@ -14,21 +14,29 @@ const supabase = createClient(
 
 // Crear ingreso
 app.post('/api/ingresos', async (req, res) => {
-  const { alumno, tipo, monto, fecha } = req.body;
+  const { alumno_id, tipo, monto, fecha, observacion } = req.body;
 
   const { data, error } = await supabase
     .from('ingresos')
-    .insert([{ alumno, tipo, monto, fecha }]);
+    .insert([{ alumno_id, tipo, monto, fecha, observacion }]);
 
   if (error) return res.status(500).json({ error: error.message });
   res.json(data);
 });
 
-// Listar ingresos
+// Listar ingresos (con nombre del alumno)
 app.get('/api/ingresos', async (req, res) => {
   const { data, error } = await supabase
     .from('ingresos')
-    .select('*')
+    .select(`
+      id,
+      alumno_id,
+      monto,
+      tipo,
+      fecha,
+      observacion,
+      alumnos (nombre)
+    `)
     .order('fecha', { ascending: false });
 
   if (error) return res.status(500).json({ error: error.message });
@@ -38,11 +46,11 @@ app.get('/api/ingresos', async (req, res) => {
 // Actualizar ingreso
 app.put('/api/ingresos/:id', async (req, res) => {
   const id = req.params.id;
-  const { alumno, tipo, monto, fecha } = req.body;
+  const { alumno_id, tipo, monto, fecha, observacion } = req.body;
 
   const { data, error } = await supabase
     .from('ingresos')
-    .update({ alumno, tipo, monto, fecha })
+    .update({ alumno_id, tipo, monto, fecha, observacion })
     .eq('id', id);
 
   if (error) return res.status(500).json({ error: error.message });

@@ -36,10 +36,11 @@ document.addEventListener('DOMContentLoaded', () => {
     ingresos.forEach(i => {
       const fila = document.createElement('tr');
       fila.innerHTML = `
-        <td>${i.alumno}</td>
+        <td>${i.alumnos ? i.alumnos.nombre : i.alumno_id}</td>
         <td>${i.tipo}</td>
         <td>$${i.monto.toFixed(2)}</td>
-        <td>${i.fecha}</td>
+        <td>${i.fecha || ''}</td>
+        <td>${i.observacion || ''}</td>
         <td>
           <button class="editar" title="Editar">✏️</button>
           <button class="eliminar" title="Eliminar">❌</button>
@@ -50,10 +51,11 @@ document.addEventListener('DOMContentLoaded', () => {
       fila.querySelector('.editar').addEventListener('click', () => {
         filaEditando = fila;
         idEditando = i.id;
-        document.getElementById('nombre').value = i.alumno;
+        document.getElementById('alumno_id').value = i.alumno_id;
         document.getElementById('tipo').value = i.tipo;
         document.getElementById('monto').value = i.monto;
         document.getElementById('fecha').value = i.fecha;
+        document.getElementById('observacion').value = i.observacion || '';
         formSection.classList.remove('hidden');
         listaSection.classList.add('hidden');
       });
@@ -66,22 +68,22 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function guardarIngreso(alumnoId, tipo, monto, fecha, observacion) {
-  if (idEditando) {
-    await fetch(`/api/ingresos/${idEditando}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ alumno_id: alumno_id, tipo, monto, fecha, observacion })
-    });
-    idEditando = null;
-  } else {
-    await fetch('/api/ingresos', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ alumno_id: alumnoId, tipo, monto, fecha, observacion })
-    });
+    if (idEditando) {
+      await fetch(`/api/ingresos/${idEditando}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ alumno_id: alumnoId, tipo, monto, fecha, observacion })
+      });
+      idEditando = null;
+    } else {
+      await fetch('/api/ingresos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ alumno_id: alumnoId, tipo, monto, fecha, observacion })
+      });
+    }
+    await cargarIngresos();
   }
-  await cargarIngresos();
-}
 
   // --- Botón: ver mes actual ---
   btnMesActual.addEventListener('click', () => {
@@ -136,57 +138,11 @@ document.addEventListener('DOMContentLoaded', () => {
     cargarIngresos();
   });
 
-  // --- Formulario: guardar alumno ---
+  // --- Formulario: guardar ingreso ---
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const nombre = document.getElementById('nombre').value.trim();
+    const alumnoId = parseInt(document.getElementById('alumno_id').value);
     const tipo = document.getElementById('tipo').value;
     const monto = parseFloat(document.getElementById('monto').value);
     const fechaInput = document.getElementById('fecha').value;
-
-    const hoy = new Date();
-    const fechaLocal = `${hoy.getFullYear()}-${String(hoy.getMonth()+1).padStart(2,'0')}-${String(hoy.getDate()).padStart(2,'0')}`;
-    const fecha = fechaInput || fechaLocal;
-
-    await guardarIngreso(nombre, tipo, monto, fecha);
-
-    // 🔔 Mensaje de confirmación personalizado con icono animado y sonido
-    const confirmacion = document.createElement('div');
-    confirmacion.classList.add('mensaje-confirmacion');
-
-    const icono = document.createElement('span');
-    icono.classList.add('icono-check');
-    icono.textContent = "✅";
-
-    const texto = document.createElement('span');
-    texto.textContent = ` Alumno "${nombre}" guardado con éxito. Monto: $${monto.toFixed(2)} (${tipo})`;
-
-    confirmacion.appendChild(icono);
-    confirmacion.appendChild(texto);
-    document.body.appendChild(confirmacion);
-
-    // 🎵 Sonido de confirmación
-    try {
-      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      const oscillator = audioCtx.createOscillator();
-      oscillator.type = 'triangle';
-      oscillator.frequency.setValueAtTime(880, audioCtx.currentTime);
-      oscillator.connect(audioCtx.destination);
-      oscillator.start();
-      oscillator.stop(audioCtx.currentTime + 0.2);
-    } catch (err) {
-      console.warn("No se pudo reproducir sonido:", err);
-    }
-
-    setTimeout(() => {
-      confirmacion.remove();
-    }, 3000);
-
-    form.reset();
-    formSection.classList.add('hidden');
-    listaSection.classList.remove('hidden');
-  });
-
-  // --- Inicializar ---
-  cargarIngresos();
-});
+    const observacion = document.getElementById('
