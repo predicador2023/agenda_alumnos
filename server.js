@@ -1,66 +1,69 @@
+// Importar dependencias
 const express = require('express');
-const bodyParser = require('body-parser');
-const sqlite3 = require('sqlite3').verbose();
+const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
-const db = new sqlite3.Database('./db/agenda_alumnos.db');
-
-
-app.use(bodyParser.json());
+app.use(express.json());
 app.use(express.static('public'));
 
+// Conexión a Supabase usando variables de entorno
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_KEY
+);
+
 // Crear ingreso
-app.post('/api/ingresos', (req, res) => {
+app.post('/api/ingresos', async (req, res) => {
   const { alumno, tipo, monto, fecha } = req.body;
-  db.run(
-    `INSERT INTO ingresos (alumno, tipo, monto, fecha) VALUES (?, ?, ?, ?)`,
-    [alumno, tipo, monto, fecha],
-    function(err) {
-      if (err) {
-        return res.status(500).json({ error: err.message });
-      }
-      res.json({ id: this.lastID });
-    }
-  );
+
+  const { data, error } = await supabase
+    .from('ingresos')
+    .insert([{ alumno, tipo, monto, fecha }]);
+
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data);
 });
 
 // Listar ingresos
-app.get('/api/ingresos', (req, res) => {
-  db.all(`SELECT * FROM ingresos ORDER BY fecha DESC`, [], (err, rows) => {
-    if (err) {
-      return res.status(500).json({ error: err.message });
-    }
-    res.json(rows);
-  });
+app.get('/api/ingresos', async (req, res) => {
+  const { data, error } = await supabase
+    .from('ingresos')
+    .select('*')
+    .order('fecha', { ascending: false });
+
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data);
 });
 
 // Actualizar ingreso
-app.put('/api/ingresos/:id', (req, res) => {
+app.put('/api/ingresos/:id', async (req, res) => {
   const id = req.params.id;
   const { alumno, tipo, monto, fecha } = req.body;
-  db.run(
-    `UPDATE ingresos SET alumno = ?, tipo = ?, monto = ?, fecha = ? WHERE id = ?`,
-    [alumno, tipo, monto, fecha, id],
-    function(err) {
-      if (err) {
-        return res.status(500).json({ error: err.message });
-      }
-      res.json({ updatedID: id });
-    }
-  );
+
+  const { data, error } = await supabase
+    .from('ingresos')
+    .update({ alumno, tipo, monto, fecha })
+    .eq('id', id);
+
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data);
 });
 
 // Eliminar ingreso
-app.delete('/api/ingresos/:id', (req, res) => {
+app.delete('/api/ingresos/:id', async (req, res) => {
   const id = req.params.id;
-  db.run(`DELETE FROM ingresos WHERE id = ?`, id, function(err) {
-    if (err) {
-      return res.status(500).json({ error: err.message });
-    }
-    res.json({ deletedID: id });
-  });
+
+  const { data, error } = await supabase
+    .from('ingresos')
+    .delete()
+    .eq('id', id);
+
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data);
 });
 
-app.listen(3000, () => {
-  console.log('Servidor corriendo en http://localhost:3000');
+// Render necesita PORT dinámico
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Servidor corriendo en puerto ${PORT}`);
 });
