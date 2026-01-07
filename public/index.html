@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>Agenda de Alumnos</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header>
+    <h1>Agenda de Alumnos</h1>
+  </header>
+
+  <main>
+    <!-- Botones principales -->
+    <div class="grupo-botones">
+      <button id="btn-ingresar">Ingresar Alumno</button>
+      <!-- Formulario justo debajo del botón -->
+      <section id="form-section" class="hidden">
+        <h2>Nuevo Alumno</h2>
+        <form id="form-alumno">
+          <label>Nombre:
+            <input type="text" id="nombre" required />
+          </label>
+          <label>Tipo:
+            <select id="tipo" required>
+              <option value="mensual">Mensual</option>
+              <option value="diario">Diario</option>
+            </select>
+          </label>
+          <label>Monto:
+            <input type="number" id="monto" min="0" step="0.01" required />
+          </label>
+          <label>Fecha:
+            <input type="date" id="fecha" />
+          </label>
+          <button type="submit">Guardar</button>
+        </form>
+      </section>
+
+      <button id="btn-ver-lista">Ver Lista de Ingresos</button>
+    </div>
+
+    <!-- Bloque de resumen -->
+    <section id="resumen-ingresos">
+      <h2>Resumen de Ingresos</h2>
+      <div class="grupo-resumen">
+        <button id="btn-mes-actual">Ver Mes Actual</button>
+        <button id="btn-meses-anteriores">Ver Meses Anteriores</button>
+      </div>
+      <div id="resultado-resumen"></div>
+      <table id="tabla-meses-anteriores" class="hidden">
+        <thead>
+          <tr>
+            <th>Mes</th>
+            <th>Cantidad</th>
+          </tr>
+        </thead>
+        <tbody id="cuerpo-tabla-meses"></tbody>
+      </table>
+    </section>
+
+    <!-- Lista de ingresos -->
+    <section id="lista-section" class="hidden">
+      <h2>Últimos ingresos</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Tipo</th>
+            <th>Monto</th>
+            <th>Fecha</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="tabla-ingresos"></tbody>
+      </table>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
