@@ -16,7 +16,6 @@ document.addEventListener('DOMContentLoaded', () => {
   let idEditando = null;
   let ingresos = [];
 
-  // --- Funciones auxiliares ---
   function filtrarPorMes(ingresos, mes, año) {
     return ingresos.filter(i => {
       const f = new Date(i.fecha);
@@ -85,7 +84,6 @@ document.addEventListener('DOMContentLoaded', () => {
     await cargarIngresos();
   }
 
-  // --- Botón: ver mes actual ---
   btnMesActual.addEventListener('click', () => {
     const hoy = new Date();
     const mes = hoy.getMonth() + 1;
@@ -97,7 +95,6 @@ document.addEventListener('DOMContentLoaded', () => {
     tablaMeses.classList.add('hidden');
   });
 
-  // --- Botón: ver meses anteriores ---
   btnMesesAnteriores.addEventListener('click', () => {
     const hoy = new Date();
     const añoAnterior = hoy.getFullYear() - 1;
@@ -123,7 +120,6 @@ document.addEventListener('DOMContentLoaded', () => {
     tablaMeses.classList.remove('hidden');
   });
 
-  // --- Botones principales ---
   btnIngresar.addEventListener('click', () => {
     formSection.classList.toggle('hidden');
     listaSection.classList.add('hidden');
@@ -138,11 +134,54 @@ document.addEventListener('DOMContentLoaded', () => {
     cargarIngresos();
   });
 
-  // --- Formulario: guardar ingreso ---
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const alumnoId = parseInt(document.getElementById('alumno_id').value);
     const tipo = document.getElementById('tipo').value;
     const monto = parseFloat(document.getElementById('monto').value);
     const fechaInput = document.getElementById('fecha').value;
-    const observacion = document.getElementById('
+    const observacion = document.getElementById('observacion').value.trim();
+
+    const hoy = new Date();
+    const fechaLocal = `${hoy.getFullYear()}-${String(hoy.getMonth()+1).padStart(2,'0')}-${String(hoy.getDate()).padStart(2,'0')}`;
+    const fecha = fechaInput || fechaLocal;
+
+    await guardarIngreso(alumnoId, tipo, monto, fecha, observacion);
+
+    const confirmacion = document.createElement('div');
+    confirmacion.classList.add('mensaje-confirmacion');
+
+    const icono = document.createElement('span');
+    icono.classList.add('icono-check');
+    icono.textContent = "✅";
+
+    const texto = document.createElement('span');
+    texto.textContent = ` Alumno ID ${alumnoId} guardado con éxito. Monto: $${monto.toFixed(2)} (${tipo})`;
+
+    confirmacion.appendChild(icono);
+    confirmacion.appendChild(texto);
+    document.body.appendChild(confirmacion);
+
+    try {
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = audioCtx.createOscillator();
+      oscillator.type = 'triangle';
+      oscillator.frequency.setValueAtTime(880, audioCtx.currentTime);
+      oscillator.connect(audioCtx.destination);
+      oscillator.start();
+      oscillator.stop(audioCtx.currentTime + 0.2);
+    } catch (err) {
+      console.warn("No se pudo reproducir sonido:", err);
+    }
+
+    setTimeout(() => {
+      confirmacion.remove();
+    }, 3000);
+
+    form.reset();
+    formSection.classList.add('hidden');
+    listaSection.classList.remove('hidden');
+  });
+
+  cargarIngresos();
+});
