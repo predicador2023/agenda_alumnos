@@ -1,6 +1,7 @@
 {
   "name": "agenda-app",
   "version": "1.0.0",
+  "type": "module",
   "description": "Agenda escolar con Node.js y SQLite",
   "main": "server.js",
   "scripts": {
