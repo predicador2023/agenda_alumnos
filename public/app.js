@@ -47,25 +47,46 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Guardar alumno + ingreso
-  async function guardarIngreso(nombre, tipo, monto, fecha) {
-    // Primero crear alumno
+ async function guardarIngreso(nombre, tipo, monto, fecha) {
+  try {
+    // 1. Crear alumno
     const alumnoRes = await fetch('/api/alumnos', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ nombre })
     });
-    const alumnoData = await alumnoRes.json();
-    const alumnoId = alumnoData[0].id;
 
-    // Luego crear ingreso
-    await fetch('/api/ingresos', {
+    if (!alumnoRes.ok) throw new Error('Error al crear alumno');
+    
+    const alumnoData = await alumnoRes.json();
+    
+    // IMPORTANTE: Verificamos si recibimos el ID (algunas APIs devuelven el objeto directo o en un array)
+    const alumnoId = Array.isArray(alumnoData) ? alumnoData[0].id : alumnoData.id;
+
+    if (!alumnoId) throw new Error('No se obtuvo el ID del alumno');
+
+    // 2. Crear ingreso usando el ID obtenido
+    const ingresoRes = await fetch('/api/ingresos', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ alumno_id: alumnoId, tipo, monto, fecha })
+      body: JSON.stringify({ 
+        alumno_id: alumnoId, 
+        tipo: tipo, 
+        monto: monto, 
+        fecha: fecha 
+      })
     });
 
+    if (!ingresoRes.ok) throw new Error('Error al crear el registro de ingreso');
+
+    alert('¡Ingreso guardado con éxito!');
     await cargarIngresos();
+
+  } catch (error) {
+    console.error('Error detallado:', error);
+    alert('Error al guardar: ' + error.message);
   }
+}
 
   // Evento submit del formulario
   form.addEventListener('submit', async (e) => {
