@@ -18,13 +18,29 @@ const supabase = createClient(
 
 // Crear alumno
 app.post('/api/alumnos', async (req, res) => {
-  const { nombre } = req.body;
-  const { data, error } = await supabase
-    .from('alumnos')
-    .insert([{ nombre }])
-    .select();
-  if (error) return res.status(500).json({ error: error.message });
-  res.json(data);
+  try {
+    const { nombre } = req.body;
+    
+    // Validamos que llegue el nombre
+    if (!nombre) {
+      return res.status(400).json({ error: "El nombre es obligatorio" });
+    }
+
+    const { data, error } = await supabase
+      .from('alumnos')
+      .insert([{ nombre }])
+      .select();
+
+    if (error) {
+      console.error("Error de Supabase:", error);
+      return res.status(400).json(error);
+    }
+
+    res.status(201).json(data);
+  } catch (err) {
+    console.error("Error fatal en el servidor:", err);
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
 });
 
 // Listar alumnos (opcional)
