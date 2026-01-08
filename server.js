@@ -58,12 +58,18 @@ app.post('/api/ingresos', async (req, res) => {
   const { alumno_id, tipo, monto, fecha, observacion } = req.body;
   const { data, error } = await supabase
     .from('ingresos')
-    .insert([{ alumno_id, tipo, monto, fecha, observacion }])
+    .insert([{ 
+      alumno_id, 
+      tipo, 
+      monto, 
+      fecha, 
+      observacion: observacion || "" // Agregamos esto por seguridad
+    }])
     .select();
-  if (error) return res.status(500).json({ error: error.message });
+
+  if (error) return res.status(400).json(error);
   res.json(data);
 });
-
 // Listar ingresos con JOIN a alumnos
 app.get('/api/ingresos', async (req, res) => {
   const { data, error } = await supabase
