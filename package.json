@@ -1,11 +1,10 @@
 {
   "name": "agenda-app",
   "version": "1.0.0",
-  "type": "module",
   "description": "Agenda escolar con Node.js y SQLite",
   "main": "server.js",
   "scripts": {
-    "start": "nodemon server.js"
+    "start": "node server.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.90.0",
