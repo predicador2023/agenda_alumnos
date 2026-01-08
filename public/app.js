@@ -73,7 +73,8 @@ document.addEventListener('DOMContentLoaded', () => {
         alumno_id: alumnoId, 
         tipo: tipo, 
         monto: monto, 
-        fecha: fecha 
+        fecha: fecha ,
+        observacion: "" // Enviamos esto para que coincida con tu tabla
       })
     });
 
