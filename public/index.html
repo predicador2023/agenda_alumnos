@@ -14,43 +14,39 @@
   <main>
     <!-- Botones principales -->
     <div class="grupo-botones">
-      <button id="btn-ingresar">Ingresar Ingreso</button>
-      
-      <!-- Formulario de ingresos -->
-      <section id="form-section" class="hidden">
-        <h2>Nuevo Ingreso</h2>
-        <form id="form-alumno">
-          <label>ID Alumno:
-            <input type="number" id="alumno_id" required />
-          </label>
-          <label>Tipo:
-            <select id="tipo" required>
-              <option value="mensual">Mensual</option>
-              <option value="diario">Diario</option>
-            </select>
-          </label>
-          <label>Monto:
-            <input type="number" id="monto" min="0" step="0.01" required />
-          </label>
-          <label>Fecha:
-            <input type="date" id="fecha" />
-          </label>
-          <label>Observación:
-            <input type="text" id="observacion" />
-          </label>
-          <button type="submit">Guardar ingreso</button>
-        </form>
-      </section>
-
-      <button id="btn-ver-lista">Ver Lista de Ingresos</button>
+      <button id="btn-ingresar">Ingresar alumno</button>
+      <button id="btn-ver-lista">Ver lista de ingresos</button>
     </div>
+
+    <!-- Formulario de ingreso de alumno -->
+    <section id="form-section" class="hidden">
+      <h2>Nuevo alumno con ingreso</h2>
+      <form id="form-alumno">
+        <label>Nombre:
+          <input type="text" id="nombre" required />
+        </label>
+        <label>Tipo:
+          <select id="tipo" required>
+            <option value="mensual">Mensual</option>
+            <option value="diario">Diario</option>
+          </select>
+        </label>
+        <label>Monto:
+          <input type="number" id="monto" min="0" step="0.01" required />
+        </label>
+        <label>Fecha:
+          <input type="date" id="fecha" />
+        </label>
+        <button type="submit">Guardar ingreso</button>
+      </form>
+    </section>
 
     <!-- Bloque de resumen -->
     <section id="resumen-ingresos">
-      <h2>Resumen de Ingresos</h2>
+      <h2>Resumen de ingresos</h2>
       <div class="grupo-resumen">
-        <button id="btn-mes-actual">Ver Mes Actual</button>
-        <button id="btn-meses-anteriores">Ver Meses Anteriores</button>
+        <button id="btn-mes-actual">Ver mes actual</button>
+        <button id="btn-meses-anteriores">Ver meses anteriores</button>
       </div>
       <div id="resultado-resumen"></div>
       <table id="tabla-meses-anteriores" class="hidden">
@@ -70,11 +66,10 @@
       <table>
         <thead>
           <tr>
-            <th>Alumno</th>
+            <th>Nombre</th>
             <th>Tipo</th>
             <th>Monto</th>
             <th>Fecha</th>
-            <th>Observación</th>
             <th>Acciones</th>
           </tr>
         </thead>
