@@ -31,23 +31,33 @@ document.addEventListener('DOMContentLoaded', () => {
       ingresos.forEach(i => {
         const fila = document.createElement('tr');
         
-        // Usamos nombre_alumno que es la nueva columna de texto
+        // Sincronizado con la columna 'nombre_alumno' de Supabase
         const nombreMostrar = i.nombre_alumno || 'Sin nombre';
         
         fila.innerHTML = `
           <td>${nombreMostrar}</td>
           <td>${i.tipo}</td>
           <td>$${Number(i.monto).toLocaleString('es-AR')}</td>
-          <td>${i.fecha}</td>
+          <td>${i.fecha || 'S/F'}</td>
           <td>
             <button class="eliminar" data-id="${i.id}">❌</button>
           </td>
         `;
         
-        fila.querySelector('.eliminar').addEventListener('click', async () => {
-          if(confirm('¿Seguro que quieres eliminar este registro?')) {
-            await fetch(`/api/ingresos/${i.id}`, { method: 'DELETE' });
-            await cargarIngresos();
+        // Evento para eliminar usando el ID único de la fila
+        fila.querySelector('.eliminar').addEventListener('click', async (e) => {
+          const idParaEliminar = e.target.getAttribute('data-id');
+          if(confirm(`¿Seguro que quieres eliminar el registro de ${nombreMostrar}?`)) {
+            try {
+              const deleteRes = await fetch(`/api/ingresos/${idParaEliminar}`, { method: 'DELETE' });
+              if(deleteRes.ok) {
+                await cargarIngresos(); // Recarga la lista tras borrar
+              } else {
+                alert("No se pudo eliminar el registro.");
+              }
+            } catch (err) {
+              console.error("Error al eliminar:", err);
+            }
           }
         });
         tablaIngresos.appendChild(fila);
@@ -57,10 +67,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // 2. Guardar ingreso (Simplificado: directo a ingresos)
+  // 2. Guardar ingreso (Directo a la columna de texto)
   async function guardarIngreso(nombre, tipo, monto, fecha) {
     try {
-      // Enviamos el nombre directamente como texto al backend
       const ingresoRes = await fetch('/api/ingresos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -76,8 +85,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!ingresoRes.ok) throw new Error("Error al crear el registro de ingreso");
 
       alert('¡Ingreso guardado con éxito!');
-      await cargarIngresos();
-      mostrar(listaSection);
+      await cargarIngresos(); // Actualiza la lista automáticamente
+      mostrar(listaSection); // Te lleva a ver el resultado
 
     } catch (error) {
       console.error('Error detallado:', error);
@@ -88,7 +97,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // 3. Evento submit del formulario
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    // Capturamos 'nombre' que es el ID del input en tu HTML
     const nombreValor = document.getElementById('nombre').value.trim();
     const tipoValor = document.getElementById('tipo').value;
     const montoValor = parseFloat(document.getElementById('monto').value);
