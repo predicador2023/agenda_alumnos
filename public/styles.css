@@ -578,15 +578,14 @@ td:last-child {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 4px; /* Espacio mínimo entre lápiz y equis */
+    gap: 4px;
 }
 
 /* =========================================================
-   2. MEDIA QUERIES (Ajuste fino para pantallas pequeñas)
+   2. MEDIA QUERIES (Ajuste descendente)
    ========================================================= */
 
 @media (max-width: 768px) {
-  /* Reducimos un poco el padding de las celdas para ganar espacio */
   th, td {
     padding: 6px 4px;
     font-size: 0.9rem;
@@ -594,22 +593,14 @@ td:last-child {
 }
 
 @media (max-width: 600px) {
-  /* En móviles, nos aseguramos que los botones no se amontonen */
-  td:last-child {
-    flex-direction: row; /* Siempre uno al lado del otro */
-    flex-wrap: nowrap;
-    min-width: 70px; /* Evita que la columna se achique demasiado */
-  }
-
   .btn-editar, .eliminar {
-    width: 28px; /* Un pelín más chicos para pantallas mini */
+    width: 28px;
     height: 28px;
     font-size: 0.8rem;
   }
 }
 
 @media (max-width: 400px) {
-  /* Para celulares muy angostos */
   header h1 { font-size: 1.2rem; }
   
   th, td {
@@ -617,10 +608,45 @@ td:last-child {
     padding: 4px 2px;
   }
   
-  /* Si la tabla es muy ancha, permitimos scroll lateral */
   table {
-    display: block;
-    overflow-x: auto;
-    white-space: nowrap;
+    display: table; /* Cambiado de block a table para evitar scroll si es posible */
+    width: 100%;
   }
+}
+
+/* LA SOLUCIÓN FINAL PARA 330px */
+@media (max-width: 330px) {
+  main, section {
+    padding: 5px 2px !important;
+  }
+
+  /* BOTONES EN COLUMNA: Aquí es donde ahorramos el espacio lateral */
+  td:last-child {
+    display: flex !important;
+    flex-direction: column !important; 
+    gap: 3px !important;
+    width: 35px !important; 
+    min-width: 35px !important;
+    padding: 2px !important;
+  }
+
+  .btn-editar, .eliminar {
+    width: 24px !important;
+    height: 24px !important;
+    font-size: 0.75rem !important;
+    margin: 0 !important;
+  }
+
+  th, td {
+    font-size: 10px !important;
+    padding: 4px 1px !important;
+    word-break: break-word; /* Permite que el nombre rompa en dos líneas si es muy largo */
+  }
+
+  /* Distribución de anchos para que "Jose Bedoya" entre bien */
+  th:nth-child(1), td:nth-child(1) { width: 35%; } 
+  th:nth-child(2), td:nth-child(2) { width: 20%; } 
+  th:nth-child(3), td:nth-child(3) { width: 20%; } 
+  th:nth-child(4), td:nth-child(4) { width: 15%; } 
+  th:nth-child(5), td:nth-child(5) { width: 10%; } 
 }
