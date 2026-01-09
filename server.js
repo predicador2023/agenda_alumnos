@@ -10,11 +10,10 @@ app.use(express.static('public'));
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
-// 1. Guardar Ingresos (Actualizado para nombre_alumno como texto)
+// 1. Guardar Ingresos (POST)
 app.post('/api/ingresos', async (req, res) => {
   try {
     const { nombre_alumno, tipo, monto, fecha, observacion } = req.body;
-    
     const { data, error } = await supabase
       .from('ingresos')
       .insert([{ 
@@ -36,10 +35,9 @@ app.post('/api/ingresos', async (req, res) => {
   }
 });
 
-// 2. Cargar Ingresos (CORREGIDO: Ya no pide datos de la tabla 'alumnos')
+// 2. Cargar Ingresos (GET)
 app.get('/api/ingresos', async (req, res) => {
   try {
-    // Solo seleccionamos las columnas reales de la tabla ingresos
     const { data, error } = await supabase
       .from('ingresos')
       .select('*') 
@@ -55,7 +53,35 @@ app.get('/api/ingresos', async (req, res) => {
   }
 });
 
-// 3. Eliminar Ingreso (Para que funcione el botón de la X)
+// 3. ACTUALIZAR Ingreso (PUT) - ¡LA PIEZA NUEVA!
+app.put('/api/ingresos/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { nombre_alumno, tipo, monto, fecha, observacion } = req.body;
+    
+    const { data, error } = await supabase
+      .from('ingresos')
+      .update({ 
+        nombre_alumno, 
+        tipo, 
+        monto: parseFloat(monto), 
+        fecha, 
+        observacion: observacion || "" 
+      })
+      .eq('id', id)
+      .select();
+
+    if (error) {
+      console.error("Error Supabase Update:", error);
+      return res.status(400).json(error);
+    }
+    res.json(data);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// 4. Eliminar Ingreso (DELETE)
 app.delete('/api/ingresos/:id', async (req, res) => {
   try {
     const { id } = req.params;

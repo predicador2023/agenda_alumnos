@@ -1,11 +1,15 @@
 document.addEventListener('DOMContentLoaded', () => {
-  // Botones y secciones
+  // Elementos del DOM
   const btnIngresar = document.getElementById('btn-ingresar');
   const btnVerLista = document.getElementById('btn-ver-lista');
   const formSection = document.getElementById('form-section');
   const listaSection = document.getElementById('lista-section');
   const form = document.getElementById('form-alumno');
   const tablaIngresos = document.getElementById('tabla-ingresos');
+  const formTitulo = document.getElementById('form-titulo');
+  const btnSubmit = document.getElementById('btn-submit');
+  const btnCancelar = document.getElementById('btn-cancelar');
+  const editIdInput = document.getElementById('edit-id');
 
   const btnMesActual = document.getElementById('btn-mes-actual');
   const btnMesesAnteriores = document.getElementById('btn-meses-anteriores');
@@ -15,144 +19,162 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let ingresos = [];
 
-  // Mostrar secciones
   function mostrar(seccion) {
     [formSection, listaSection].forEach(s => s.classList.add('hidden'));
     seccion.classList.remove('hidden');
   }
 
-  // 1. Cargar ingresos desde backend
+  // 1. Cargar ingresos (Read)
   async function cargarIngresos() {
     try {
       const res = await fetch('/api/ingresos');
       ingresos = await res.json();
-
-      tablaIngresos.innerHTML = "";
-      ingresos.forEach(i => {
-        const fila = document.createElement('tr');
-        
-        // Sincronizado con la columna 'nombre_alumno' de Supabase
-        const nombreMostrar = i.nombre_alumno || 'Sin nombre';
-        
-        fila.innerHTML = `
-          <td>${nombreMostrar}</td>
-          <td>${i.tipo}</td>
-          <td>$${Number(i.monto).toLocaleString('es-AR')}</td>
-          <td>${i.fecha || 'S/F'}</td>
-          <td>
-            <button class="eliminar" data-id="${i.id}">❌</button>
-          </td>
-        `;
-        
-        // Evento para eliminar usando el ID único de la fila
-        fila.querySelector('.eliminar').addEventListener('click', async (e) => {
-          const idParaEliminar = e.target.getAttribute('data-id');
-          if(confirm(`¿Seguro que quieres eliminar el registro de ${nombreMostrar}?`)) {
-            try {
-              const deleteRes = await fetch(`/api/ingresos/${idParaEliminar}`, { method: 'DELETE' });
-              if(deleteRes.ok) {
-                await cargarIngresos(); // Recarga la lista tras borrar
-              } else {
-                alert("No se pudo eliminar el registro.");
-              }
-            } catch (err) {
-              console.error("Error al eliminar:", err);
-            }
-          }
-        });
-        tablaIngresos.appendChild(fila);
-      });
+      renderizarTabla();
     } catch (error) {
       console.error("Error al cargar lista:", error);
     }
   }
 
-  // 2. Guardar ingreso (Directo a la columna de texto)
-  async function guardarIngreso(nombre, tipo, monto, fecha) {
-    try {
-      const ingresoRes = await fetch('/api/ingresos', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          nombre_alumno: nombre, 
-          tipo: tipo, 
-          monto: monto, 
-          fecha: fecha, 
-          observacion: "" 
-        })
+  function renderizarTabla() {
+    tablaIngresos.innerHTML = "";
+    ingresos.forEach(i => {
+      const fila = document.createElement('tr');
+      const nombreMostrar = i.nombre_alumno || 'Sin nombre';
+      
+      fila.innerHTML = `
+        <td>${nombreMostrar}</td>
+        <td>${i.tipo}</td>
+        <td>$${Number(i.monto).toLocaleString('es-AR')}</td>
+        <td>${i.fecha || 'S/F'}</td>
+        <td>
+          <button class="btn-editar" data-id="${i.id}">✏️</button>
+          <button class="eliminar" data-id="${i.id}">❌</button>
+        </td>
+      `;
+      
+      // Evento Eliminar
+      fila.querySelector('.eliminar').addEventListener('click', async () => {
+        if(confirm(`¿Eliminar registro de ${nombreMostrar}?`)) {
+          await fetch(`/api/ingresos/${i.id}`, { method: 'DELETE' });
+          cargarIngresos();
+        }
       });
 
-      if (!ingresoRes.ok) throw new Error("Error al crear el registro de ingreso");
+      // Evento Editar (Carga los datos al formulario)
+      fila.querySelector('.btn-editar').addEventListener('click', () => {
+        prepararEdicion(i);
+      });
 
-      alert('¡Ingreso guardado con éxito!');
-      await cargarIngresos(); // Actualiza la lista automáticamente
-      mostrar(listaSection); // Te lleva a ver el resultado
-
-    } catch (error) {
-      console.error('Error detallado:', error);
-      alert('Error: ' + error.message);
-    }
+      tablaIngresos.appendChild(fila);
+    });
   }
 
-  // 3. Evento submit del formulario
+  function prepararEdicion(ingreso) {
+    formTitulo.textContent = "Editando alumno";
+    btnSubmit.textContent = "Confirmar Cambios";
+    btnCancelar.classList.remove('hidden');
+    formSection.classList.add('modo-edicion'); // Clase para el color que definimos
+
+    // Llenamos los campos con la info actual
+    editIdInput.value = ingreso.id;
+    document.getElementById('nombre').value = ingreso.nombre_alumno;
+    document.getElementById('tipo').value = ingreso.tipo;
+    document.getElementById('monto').value = ingreso.monto;
+    document.getElementById('fecha').value = ingreso.fecha;
+
+    mostrar(formSection);
+    window.scrollTo(0, 0); // Sube al formulario automáticamente
+  }
+
+  window.cancelarEdicion = () => {
+    form.reset();
+    editIdInput.value = "";
+    formTitulo.textContent = "Nuevo ingreso";
+    btnSubmit.textContent = "Guardar ingreso";
+    btnCancelar.classList.add('hidden');
+    formSection.classList.remove('modo-edicion');
+  };
+
+  btnCancelar.addEventListener('click', cancelarEdicion);
+
+  // 2. Guardar o Actualizar (Create & Update)
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const nombreValor = document.getElementById('nombre').value.trim();
-    const tipoValor = document.getElementById('tipo').value;
-    const montoValor = parseFloat(document.getElementById('monto').value);
-    const fechaInput = document.getElementById('fecha').value; 
+    const idParaEditar = editIdInput.value;
+    const datos = {
+      nombre_alumno: document.getElementById('nombre').value.trim(),
+      tipo: document.getElementById('tipo').value,
+      monto: parseFloat(document.getElementById('monto').value),
+      fecha: document.getElementById('fecha').value || new Date().toISOString().split('T')[0]
+    };
 
-    const fechaFinal = fechaInput || new Date().toISOString().split('T')[0];
+    try {
+      let url = '/api/ingresos';
+      let metodo = 'POST';
 
-    await guardarIngreso(nombreValor, tipoValor, montoValor, fechaFinal);
-    form.reset();
+      if (idParaEditar) {
+        url = `/api/ingresos/${idParaEditar}`;
+        metodo = 'PUT';
+      }
+
+      const res = await fetch(url, {
+        method: metodo,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(datos)
+      });
+
+      if (res.ok) {
+        alert(idParaEditar ? '¡Cambios guardados!' : '¡Ingreso guardado!');
+        cancelarEdicion();
+        await cargarIngresos();
+        mostrar(listaSection);
+      }
+    } catch (error) {
+      alert("Error al procesar: " + error.message);
+    }
   });
 
-  // Botones de navegación
-  btnIngresar.addEventListener('click', () => mostrar(formSection));
+  // Navegación y Resúmenes (Mantenemos tu lógica original)
+  btnIngresar.addEventListener('click', () => {
+    cancelarEdicion();
+    mostrar(formSection);
+  });
+  
   btnVerLista.addEventListener('click', () => {
     mostrar(listaSection);
     cargarIngresos();
   });
 
-  // Resumen mes actual
   btnMesActual.addEventListener('click', () => {
     const hoy = new Date();
-    const mesActual = hoy.getMonth() + 1;
-    const anioActual = hoy.getFullYear();
-
+    const mes = hoy.getMonth() + 1;
+    const anio = hoy.getFullYear();
     const ingresosMes = ingresos.filter(i => {
       if(!i.fecha) return false;
-      const partes = i.fecha.split('-'); 
-      return parseInt(partes[1]) === mesActual && parseInt(partes[0]) === anioActual;
+      const p = i.fecha.split('-'); 
+      return parseInt(p[1]) === mes && parseInt(p[0]) === anio;
     });
-
     const total = ingresosMes.reduce((acc, i) => acc + Number(i.monto), 0);
-    resultadoResumen.innerHTML = `<strong>Total ${mesActual}/${anioActual}: $${total.toLocaleString('es-AR')}</strong>`;
+    resultadoResumen.innerHTML = `<strong>Total ${mes}/${anio}: $${total.toLocaleString('es-AR')}</strong>`;
     tablaMeses.classList.add('hidden');
   });
 
-  // Resumen meses anteriores
   btnMesesAnteriores.addEventListener('click', () => {
     const hoy = new Date();
-    const añoAnterior = hoy.getFullYear() - 1;
+    const anioAnterior = hoy.getFullYear() - 1;
     cuerpoTabla.innerHTML = "";
-    const mesesNombres = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
-
-    mesesNombres.forEach((nombreMes, index) => {
-      const ingresosMes = ingresos.filter(ing => {
+    ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"].forEach((nombre, idx) => {
+      const mesIngresos = ingresos.filter(ing => {
         if(!ing.fecha) return false;
-        const partes = ing.fecha.split('-');
-        return parseInt(partes[1]) === (index + 1) && parseInt(partes[0]) === añoAnterior;
+        const p = ing.fecha.split('-');
+        return parseInt(p[1]) === (idx + 1) && parseInt(p[0]) === anioAnterior;
       });
-
-      const total = ingresosMes.reduce((acc, ing) => acc + Number(ing.monto), 0);
+      const total = mesIngresos.reduce((acc, ing) => acc + Number(ing.monto), 0);
       const fila = document.createElement('tr');
-      fila.innerHTML = `<td>${nombreMes} ${añoAnterior}</td><td>$${total.toLocaleString('es-AR')}</td>`;
+      fila.innerHTML = `<td>${nombre} ${anioAnterior}</td><td>$${total.toLocaleString('es-AR')}</td>`;
       cuerpoTabla.appendChild(fila);
     });
-
-    resultadoResumen.textContent = `Ingresos del año anterior (${añoAnterior})`;
+    resultadoResumen.textContent = `Ingresos de ${anioAnterior}`;
     tablaMeses.classList.remove('hidden');
   });
 });

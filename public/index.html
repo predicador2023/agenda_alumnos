@@ -18,8 +18,10 @@
     </div>
 
     <section id="form-section" class="hidden">
-      <h2>Nuevo ingreso</h2>
+      <h2 id="form-titulo">Nuevo ingreso</h2>
       <form id="form-alumno">
+        <input type="hidden" id="edit-id" value="">
+
         <label>Nombre:
           <input type="text" id="nombre" required />
         </label>
@@ -35,7 +37,11 @@
         <label>Fecha:
           <input type="date" id="fecha" />
         </label>
-        <button type="submit">Guardar ingreso</button>
+        
+        <div class="botones-form">
+            <button type="submit" id="btn-submit">Guardar ingreso</button>
+            <button type="button" id="btn-cancelar" class="hidden">Cancelar Edición</button>
+        </div>
       </form>
     </section>
 
