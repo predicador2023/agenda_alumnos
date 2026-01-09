@@ -536,34 +536,29 @@ button.eliminar:hover { background: #c0392b; }
    13) Media queries (responsivo)
    ------------------------ */
 /* <= 1024px: pequeños ajustes en espaciados */
-/* ---------------------------------------------------------
-   NUEVOS ESTILOS BASE PARA BOTONES (Antes de las Queries)
- /* =========================================================
-   1. ESTILOS DE BOTONES ACCIONES (Fuera de Media Queries)
-   ========================================================= */
-
 /* =========================================================
    1. ESTILOS BASE (PC y General)
    ========================================================= */
 .btn-editar, .eliminar {
-    width: 30px;
-    height: 30px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+    width: 32px;  /* Tamaño base cómodo para PC */
+    height: 32px;
+    display: inline-flex !important; 
+    align-items: center !important;  
+    justify-content: center !important; 
+    line-height: 1 !important;       
+    text-align: center;
+    padding: 0 !important;           
     border-radius: 6px;
     cursor: pointer;
-    font-size: 0.85rem;
     transition: all 0.2s ease;
     border: 1px solid;
-    padding: 0;
     margin: 2px;
 }
 
 /* Colores Pastel Minimalistas */
 .btn-editar {
     background-color: #fff9db;
-    color: #856404;
+    color: #e2aa00;
     border-color: #ffeeba;
 }
 
@@ -609,18 +604,18 @@ td:last-child {
   }
   
   table {
-    display: table; /* Cambiado de block a table para evitar scroll si es posible */
+    display: table; 
     width: 100%;
   }
 }
 
-/* LA SOLUCIÓN FINAL PARA 330px */
+/* LA SOLUCIÓN FINAL PARA 330px - Modo Columna */
 @media (max-width: 330px) {
   main, section {
     padding: 5px 2px !important;
   }
 
-  /* BOTONES EN COLUMNA: Aquí es donde ahorramos el espacio lateral */
+  /* BOTONES EN COLUMNA: Ahorro de espacio lateral */
   td:last-child {
     display: flex !important;
     flex-direction: column !important; 
@@ -640,10 +635,10 @@ td:last-child {
   th, td {
     font-size: 10px !important;
     padding: 4px 1px !important;
-    word-break: break-word; /* Permite que el nombre rompa en dos líneas si es muy largo */
+    word-break: break-word; 
   }
 
-  /* Distribución de anchos para que "Jose Bedoya" entre bien */
+  /* Distribución de anchos sin desplazamiento horizontal */
   th:nth-child(1), td:nth-child(1) { width: 35%; } 
   th:nth-child(2), td:nth-child(2) { width: 20%; } 
   th:nth-child(3), td:nth-child(3) { width: 20%; } 

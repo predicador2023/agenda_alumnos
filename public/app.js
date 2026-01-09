@@ -60,7 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       });
 
-      // Evento Editar (Carga los datos al formulario)
+      // Evento Editar
       fila.querySelector('.btn-editar').addEventListener('click', () => {
         prepararEdicion(i);
       });
@@ -73,9 +73,8 @@ document.addEventListener('DOMContentLoaded', () => {
     formTitulo.textContent = "Editando alumno";
     btnSubmit.textContent = "Confirmar Cambios";
     btnCancelar.classList.remove('hidden');
-    formSection.classList.add('modo-edicion'); // Clase para el color que definimos
+    formSection.classList.add('modo-edicion');
 
-    // Llenamos los campos con la info actual
     editIdInput.value = ingreso.id;
     document.getElementById('nombre').value = ingreso.nombre_alumno;
     document.getElementById('tipo').value = ingreso.tipo;
@@ -83,7 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('fecha').value = ingreso.fecha;
 
     mostrar(formSection);
-    window.scrollTo(0, 0); // Sube al formulario automáticamente
+    window.scrollTo(0, 0);
   }
 
   window.cancelarEdicion = () => {
@@ -97,7 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   btnCancelar.addEventListener('click', cancelarEdicion);
 
-  // 2. Guardar o Actualizar (Create & Update)
+  // 2. Guardar o Actualizar
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const idParaEditar = editIdInput.value;
@@ -134,7 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Navegación y Resúmenes (Mantenemos tu lógica original)
+  // Navegación
   btnIngresar.addEventListener('click', () => {
     cancelarEdicion();
     mostrar(formSection);
@@ -145,6 +144,7 @@ document.addEventListener('DOMContentLoaded', () => {
     cargarIngresos();
   });
 
+  // Resumen Mes Actual
   btnMesActual.addEventListener('click', () => {
     const hoy = new Date();
     const mes = hoy.getMonth() + 1;
@@ -159,22 +159,36 @@ document.addEventListener('DOMContentLoaded', () => {
     tablaMeses.classList.add('hidden');
   });
 
+  // Meses Anteriores (Orden Inverso: Diciembre a Enero)
   btnMesesAnteriores.addEventListener('click', () => {
     const hoy = new Date();
     const anioAnterior = hoy.getFullYear() - 1;
     cuerpoTabla.innerHTML = "";
-    ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"].forEach((nombre, idx) => {
-      const mesIngresos = ingresos.filter(ing => {
-        if(!ing.fecha) return false;
-        const p = ing.fecha.split('-');
-        return parseInt(p[1]) === (idx + 1) && parseInt(p[0]) === anioAnterior;
-      });
-      const total = mesIngresos.reduce((acc, ing) => acc + Number(ing.monto), 0);
-      const fila = document.createElement('tr');
-      fila.innerHTML = `<td>${nombre} ${anioAnterior}</td><td>$${total.toLocaleString('es-AR')}</td>`;
-      cuerpoTabla.appendChild(fila);
+
+    const nombresMeses = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+
+    // Invertimos el orden para que Diciembre sea el primero en la lista
+    const mesesInvertidos = nombresMeses.map((nombre, idx) => ({ 
+        nombre, 
+        numero: idx + 1 
+    })).reverse();
+
+    mesesInvertidos.forEach(mes => {
+        const mesIngresos = ingresos.filter(ing => {
+            if(!ing.fecha) return false;
+            const p = ing.fecha.split('-');
+            return parseInt(p[1]) === mes.numero && parseInt(p[0]) === anioAnterior;
+        });
+
+        const total = mesIngresos.reduce((acc, ing) => acc + Number(ing.monto), 0);
+        
+        const fila = document.createElement('tr');
+        fila.innerHTML = `<td>${mes.nombre} ${anioAnterior}</td><td>$${total.toLocaleString('es-AR')}</td>`;
+        cuerpoTabla.appendChild(fila);
     });
+
     resultadoResumen.textContent = `Ingresos de ${anioAnterior}`;
     tablaMeses.classList.remove('hidden');
   });
-});
+
+}); // CIERRE FINAL CORRECTO DEL DOMContentLoaded
