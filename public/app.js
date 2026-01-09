@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
     seccion.classList.remove('hidden');
   }
 
-  // Cargar ingresos desde backend
+  // 1. Cargar ingresos desde backend
   async function cargarIngresos() {
     try {
       const res = await fetch('/api/ingresos');
@@ -30,11 +30,12 @@ document.addEventListener('DOMContentLoaded', () => {
       tablaIngresos.innerHTML = "";
       ingresos.forEach(i => {
         const fila = document.createElement('tr');
-        // Usamos i.alumnos.nombre si el join funciona, sino el ID
-        const nombreAlumno = i.alumnos ? i.alumnos.nombre : 'ID: ' + i.alumno_id;
+        
+        // Usamos nombre_alumno que es la nueva columna de texto
+        const nombreMostrar = i.nombre_alumno || 'Sin nombre';
         
         fila.innerHTML = `
-          <td>${nombreAlumno}</td>
+          <td>${nombreMostrar}</td>
           <td>${i.tipo}</td>
           <td>$${Number(i.monto).toLocaleString('es-AR')}</td>
           <td>${i.fecha}</td>
@@ -56,32 +57,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Guardar alumno + ingreso
+  // 2. Guardar ingreso (Simplificado: directo a ingresos)
   async function guardarIngreso(nombre, tipo, monto, fecha) {
     try {
-      // 1. Crear alumno (Supabase devuelve un array con el nuevo registro)
-      const alumnoRes = await fetch('/api/alumnos', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nombre })
-      });
-      
-      const alumnoData = await alumnoRes.json();
-      // Obtenemos el ID del alumno (manejando si viene como objeto o array)
-      const alumnoId = Array.isArray(alumnoData) ? alumnoData[0].id : alumnoData.id;
-
-      if (!alumnoId) throw new Error("No se pudo obtener el ID del alumno");
-
-      // 2. Crear ingreso vinculado al alumno_id
+      // Enviamos el nombre directamente como texto al backend
       const ingresoRes = await fetch('/api/ingresos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          alumno_id: alumnoId, 
+          nombre_alumno: nombre, 
           tipo: tipo, 
           monto: monto, 
-          fecha: fecha, // Formato AAAA-MM-DD
-          observacion: "" // Campo requerido por tu tabla
+          fecha: fecha, 
+          observacion: "" 
         })
       });
 
@@ -97,36 +85,37 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Evento submit del formulario
+  // 3. Evento submit del formulario
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const nombre = document.getElementById('nombre').value.trim();
-    const tipo = document.getElementById('tipo').value;
-    const monto = parseFloat(document.getElementById('monto').value);
+    // Capturamos 'nombre' que es el ID del input en tu HTML
+    const nombreValor = document.getElementById('nombre').value.trim();
+    const tipoValor = document.getElementById('tipo').value;
+    const montoValor = parseFloat(document.getElementById('monto').value);
     const fechaInput = document.getElementById('fecha').value; 
 
-    // Si el usuario no elige fecha, usamos la de hoy en formato ISO (AAAA-MM-DD)
     const fechaFinal = fechaInput || new Date().toISOString().split('T')[0];
 
-    await guardarIngreso(nombre, tipo, monto, fechaFinal);
+    await guardarIngreso(nombreValor, tipoValor, montoValor, fechaFinal);
     form.reset();
   });
 
-  // Botones principales
+  // Botones de navegación
   btnIngresar.addEventListener('click', () => mostrar(formSection));
   btnVerLista.addEventListener('click', () => {
     mostrar(listaSection);
     cargarIngresos();
   });
 
-  // Resumen mes actual (Filtrado inteligente por AAAA-MM-DD)
+  // Resumen mes actual
   btnMesActual.addEventListener('click', () => {
     const hoy = new Date();
-    const mesActual = hoy.getMonth() + 1; // 1-12
+    const mesActual = hoy.getMonth() + 1;
     const anioActual = hoy.getFullYear();
 
     const ingresosMes = ingresos.filter(i => {
-      const partes = i.fecha.split('-'); // Separa "2026-01-08"
+      if(!i.fecha) return false;
+      const partes = i.fecha.split('-'); 
       return parseInt(partes[1]) === mesActual && parseInt(partes[0]) === anioActual;
     });
 
@@ -140,13 +129,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const hoy = new Date();
     const añoAnterior = hoy.getFullYear() - 1;
     cuerpoTabla.innerHTML = "";
-    const mesesNombres = [
-      "Enero","Febrero","Marzo","Abril","Mayo","Junio",
-      "Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"
-    ];
+    const mesesNombres = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
 
     mesesNombres.forEach((nombreMes, index) => {
       const ingresosMes = ingresos.filter(ing => {
+        if(!ing.fecha) return false;
         const partes = ing.fecha.split('-');
         return parseInt(partes[1]) === (index + 1) && parseInt(partes[0]) === añoAnterior;
       });

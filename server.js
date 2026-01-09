@@ -21,10 +21,19 @@ app.post('/api/alumnos', async (req, res) => {
 
 app.post('/api/ingresos', async (req, res) => {
   try {
-    const { alumno_id, tipo, monto, fecha, observacion } = req.body;
-    const { data, error } = await supabase.from('ingresos').insert([{ 
-      alumno_id, tipo, monto, fecha, observacion: observacion || "" 
-    }]).select();
+    const { nombre_alumno, tipo, monto, fecha, observacion } = req.body;
+    
+    const { data, error } = await supabase
+      .from('ingresos')
+      .insert([{ 
+        nombre_alumno, // Nombre de la columna nueva que creaste
+        tipo, 
+        monto: parseFloat(monto), 
+        fecha, 
+        observacion: observacion || "" 
+      }])
+      .select();
+
     if (error) return res.status(400).json(error);
     res.status(201).json(data);
   } catch (e) { res.status(500).json({ error: e.message }); }
