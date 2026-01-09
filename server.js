@@ -10,15 +10,7 @@ app.use(express.static('public'));
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
-app.post('/api/alumnos', async (req, res) => {
-  try {
-    const { nombre } = req.body;
-    const { data, error } = await supabase.from('alumnos').insert([{ nombre }]).select();
-    if (error) return res.status(400).json(error);
-    res.status(201).json(data);
-  } catch (e) { res.status(500).json({ error: e.message }); }
-});
-
+// 1. Guardar Ingresos (Actualizado para nombre_alumno como texto)
 app.post('/api/ingresos', async (req, res) => {
   try {
     const { nombre_alumno, tipo, monto, fecha, observacion } = req.body;
@@ -26,7 +18,7 @@ app.post('/api/ingresos', async (req, res) => {
     const { data, error } = await supabase
       .from('ingresos')
       .insert([{ 
-        nombre_alumno, // Nombre de la columna nueva que creaste
+        nombre_alumno, 
         tipo, 
         monto: parseFloat(monto), 
         fecha, 
@@ -34,17 +26,45 @@ app.post('/api/ingresos', async (req, res) => {
       }])
       .select();
 
-    if (error) return res.status(400).json(error);
+    if (error) {
+      console.error("Error Supabase Insert:", error);
+      return res.status(400).json(error);
+    }
     res.status(201).json(data);
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) { 
+    res.status(500).json({ error: e.message }); 
+  }
 });
 
+// 2. Cargar Ingresos (CORREGIDO: Ya no pide datos de la tabla 'alumnos')
 app.get('/api/ingresos', async (req, res) => {
   try {
-    const { data, error } = await supabase.from('ingresos').select('*, alumnos(nombre)').order('fecha', { ascending: false });
-    if (error) return res.status(400).json(error);
+    // Solo seleccionamos las columnas reales de la tabla ingresos
+    const { data, error } = await supabase
+      .from('ingresos')
+      .select('*') 
+      .order('fecha', { ascending: false });
+
+    if (error) {
+      console.error("Error Supabase Get:", error);
+      return res.status(400).json(error);
+    }
     res.json(data);
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) { 
+    res.status(500).json({ error: e.message }); 
+  }
+});
+
+// 3. Eliminar Ingreso (Para que funcione el botón de la X)
+app.delete('/api/ingresos/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { error } = await supabase.from('ingresos').delete().eq('id', id);
+    if (error) return res.status(400).json(error);
+    res.json({ message: "Eliminado correctamente" });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 const PORT = process.env.PORT || 10000;
