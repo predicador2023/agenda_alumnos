@@ -542,117 +542,85 @@ button.eliminar:hover { background: #c0392b; }
    1. ESTILOS DE BOTONES ACCIONES (Fuera de Media Queries)
    ========================================================= */
 
-/* Estilo Base para el botón Editar */
+/* =========================================================
+   1. ESTILOS BASE (PC y General)
+   ========================================================= */
+.btn-editar, .eliminar {
+    width: 30px;
+    height: 30px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.2s ease;
+    border: 1px solid;
+    padding: 0;
+    margin: 2px;
+}
+
+/* Colores Pastel Minimalistas */
 .btn-editar {
-    background-color: #ffeaa7; /* Crema pastel */
-    color: #d35400; /* Naranja oscuro para el icono */
-    border: 1px solid #fab1a0;
-    padding: 6px 12px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 1.1rem;
-    font-weight: bold;
-    transition: all 0.3s ease;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 5px;
+    background-color: #fff9db;
+    color: #856404;
+    border-color: #ffeeba;
 }
 
-.btn-editar:hover {
-    background-color: #fdcb6e;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-}
-
-/* Estilo Base para el botón Eliminar */
 .eliminar {
-    background-color: #ffcccc; /* Rosado pastel */
-    color: #c0392b; /* Rojo oscuro para la X */
-    border: 1px solid #ffaaaa;
-    padding: 6px 12px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 1.1rem;
-    transition: all 0.3s ease;
-    display: inline-flex;
-    align-items: center;
+    background-color: #fff5f5;
+    color: #721c24;
+    border-color: #f5c6cb;
+}
+
+/* Contenedor de los botones en la celda */
+td:last-child {
+    display: flex;
     justify-content: center;
-}
-
-.eliminar:hover {
-    background-color: #ff7675;
-    color: white;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-}
-
-/* Modo Edición para el Formulario */
-.modo-edicion {
-    border: 3px solid #ffeaa7 !important;
-    background-color: #fffdf5 !important;
-    box-shadow: 0 8px 20px rgba(255, 234, 167, 0.4) !important;
-    transform: scale(1.01);
-}
-
-/* Botón Cancelar */
-#btn-cancelar {
-    background-color: #dfe6e9;
-    color: #636e72;
-    border: 1px solid #b2bec3;
-    padding: 10px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: bold;
+    align-items: center;
+    gap: 4px; /* Espacio mínimo entre lápiz y equis */
 }
 
 /* =========================================================
-   2. MEDIA QUERIES (Ajustes de tamaño y posición)
+   2. MEDIA QUERIES (Ajuste fino para pantallas pequeñas)
    ========================================================= */
 
-@media (max-width: 1024px) {
-  .container { padding: var(--space-3); }
-  section { padding: var(--space-3); }
-}
-
 @media (max-width: 768px) {
-  main { padding: var(--space-3); }
-  th, td { padding: 10px; }
+  /* Reducimos un poco el padding de las celdas para ganar espacio */
+  th, td {
+    padding: 6px 4px;
+    font-size: 0.9rem;
+  }
 }
 
 @media (max-width: 600px) {
-  .grupo-botones {
-    flex-direction: column;
-    gap: var(--space-2);
-  }
-  
-  /* Los botones de acción se vuelven grandes para el dedo */
-  td button.btn-editar,
-  td button.eliminar {
-    width: 100%;
-    margin: 5px 0;
-    padding: 12px;
-    display: flex;
-    font-size: 1.3rem;
+  /* En móviles, nos aseguramos que los botones no se amontonen */
+  td:last-child {
+    flex-direction: row; /* Siempre uno al lado del otro */
+    flex-wrap: nowrap;
+    min-width: 70px; /* Evita que la columna se achique demasiado */
   }
 
-  .grupo-resumen {
-    grid-template-columns: 1fr 1fr;
+  .btn-editar, .eliminar {
+    width: 28px; /* Un pelín más chicos para pantallas mini */
+    height: 28px;
+    font-size: 0.8rem;
   }
 }
 
 @media (max-width: 400px) {
+  /* Para celulares muy angostos */
+  header h1 { font-size: 1.2rem; }
+  
   th, td {
-    padding: 8px 4px;
-    font-size: 13px;
+    font-size: 0.8rem;
+    padding: 4px 2px;
   }
   
-  header h1 { font-size: 20px; }
-}
-
-/* Print: Limpieza total para el papel */
-@media print {
-  .btn-editar, .eliminar, #btn-cancelar, .grupo-botones {
-    display: none !important;
+  /* Si la tabla es muy ancha, permitimos scroll lateral */
+  table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
   }
 }
