@@ -45,27 +45,22 @@
       </form>
     </section>
 
-    <section id="resumen-ingresos">
-      <h2>Resumen de ingresos</h2>
-      <div class="grupo-resumen">
-        <button id="btn-mes-actual">Ver mes actual</button>
-        <button id="btn-meses-anteriores">Ver meses anteriores</button>
-      </div>
-      <div id="resultado-resumen"></div>
-      <table id="tabla-meses-anteriores" class="hidden">
-        <thead>
-          <tr>
-            <th>Mes</th>
-            <th>Cantidad</th>
-          </tr>
-        </thead>
-        <tbody id="cuerpo-tabla-meses"></tbody>
-      </table>
-    </section>
-
     <section id="lista-section" class="hidden">
-      <h2>Últimos ingresos</h2>
-      <table>
+      <div class="cabecera-filtros" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 10px;">
+        <h2>Listado de Ingresos</h2>
+        
+        <div id="contenedor-selector">
+          <label for="filtro-mes-dinamico">Ver mes: </label>
+          <select id="filtro-mes-dinamico">
+            <option value="actual">📅 Mes Actual</option>
+            <option value="todos">🌍 Todo el historial</option>
+            <optgroup label="Meses anteriores" id="grupo-meses-historial">
+              </optgroup>
+          </select>
+        </div>
+      </div>
+
+      <table id="tabla-principal">
         <thead>
           <tr>
             <th>Nombre</th>
@@ -77,6 +72,10 @@
         </thead>
         <tbody id="tabla-ingresos"></tbody>
       </table>
+
+      <div id="mensaje-vacio" class="hidden" style="text-align: center; padding: 20px; color: #666;">
+        <p>🚫 No hay ingresos registrados en este período.</p>
+      </div>
     </section>
   </main>
 

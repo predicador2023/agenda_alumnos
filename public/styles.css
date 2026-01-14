@@ -645,3 +645,76 @@ td:last-child {
   th:nth-child(4), td:nth-child(4) { width: 15%; } 
   th:nth-child(5), td:nth-child(5) { width: 10%; } 
 }
+/* =========================================================
+   RETOQUES PARA EL SELECTOR ESTRELLA (DENTRO DEL ENTORNO)
+   ========================================================= */
+
+/* Contenedor de la cabecera en la lista */
+.cabecera-filtros {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--surface-2);
+}
+
+/* Estilo del selector dinámico */
+#filtro-mes-dinamico {
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background-color: var(--surface);
+    color: var(--text);
+    font-size: var(--font-3);
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: var(--shadow-1);
+    outline: none;
+    min-width: 150px;
+}
+
+#filtro-mes-dinamico:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(47, 143, 219, 0.2);
+}
+
+/* El cartel de "Sin datos" */
+#mensaje-vacio {
+    background: var(--surface-2);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius);
+    margin-top: 20px;
+}
+
+/* =========================================================
+   AJUSTES RESPONSIVE (MEDIA QUERIES)
+   ========================================================= */
+
+/* Celulares medianos */
+@media (max-width: 600px) {
+    .cabecera-filtros {
+        flex-direction: column; /* Apilamos título y selector */
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    #filtro-mes-dinamico {
+        width: 100%; /* El selector ocupa todo el ancho para tocar fácil */
+        padding: 12px;
+    }
+}
+
+/* Celulares ultra-pequeños (330px - El modo columna que ya tenías) */
+@media (max-width: 330px) {
+    .cabecera-filtros h2 {
+        font-size: var(--font-4) !important;
+        margin: 0;
+    }
+
+    #filtro-mes-dinamico {
+        font-size: 11px !important;
+        padding: 6px;
+    }
+}

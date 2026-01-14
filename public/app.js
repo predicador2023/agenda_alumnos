@@ -10,12 +10,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnSubmit = document.getElementById('btn-submit');
   const btnCancelar = document.getElementById('btn-cancelar');
   const editIdInput = document.getElementById('edit-id');
-
-  const btnMesActual = document.getElementById('btn-mes-actual');
-  const btnMesesAnteriores = document.getElementById('btn-meses-anteriores');
-  const resultadoResumen = document.getElementById('resultado-resumen');
-  const tablaMeses = document.getElementById('tabla-meses-anteriores');
-  const cuerpoTabla = document.getElementById('cuerpo-tabla-meses');
+  
+  // Nuevos elementos del Filtro Estrella
+  const filtroMesDinamico = document.getElementById('filtro-mes-dinamico');
+  const grupoMesesHistorial = document.getElementById('grupo-meses-historial');
+  const mensajeVacio = document.getElementById('mensaje-vacio');
 
   let ingresos = [];
 
@@ -29,45 +28,93 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       const res = await fetch('/api/ingresos');
       ingresos = await res.json();
-      renderizarTabla();
+      
+      actualizarMenuMeses(); // Llenamos el selector con los meses que existen
+      renderizarTabla();     // Dibujamos la tabla (por defecto mes actual)
     } catch (error) {
       console.error("Error al cargar lista:", error);
     }
   }
 
-  function renderizarTabla() {
-    tablaIngresos.innerHTML = "";
-    ingresos.forEach(i => {
-      const fila = document.createElement('tr');
-      const nombreMostrar = i.nombre_alumno || 'Sin nombre';
-      
-      fila.innerHTML = `
-        <td>${nombreMostrar}</td>
-        <td>${i.tipo}</td>
-        <td>$${Number(i.monto).toLocaleString('es-AR')}</td>
-        <td>${i.fecha || 'S/F'}</td>
-        <td>
-          <button class="btn-editar" data-id="${i.id}">✏️</button>
-          <button class="eliminar" data-id="${i.id}">❌</button>
-        </td>
-      `;
-      
-      // Evento Eliminar
-      fila.querySelector('.eliminar').addEventListener('click', async () => {
-        if(confirm(`¿Eliminar registro de ${nombreMostrar}?`)) {
-          await fetch(`/api/ingresos/${i.id}`, { method: 'DELETE' });
-          cargarIngresos();
-        }
-      });
+  // FUNCIÓN ESTRELLA: Llena el selector con meses reales de tus datos
+  function actualizarMenuMeses() {
+    if (!grupoMesesHistorial) return;
+    grupoMesesHistorial.innerHTML = ""; 
 
-      // Evento Editar
-      fila.querySelector('.btn-editar').addEventListener('click', () => {
-        prepararEdicion(i);
-      });
+    // Extraemos "Año-Mes" únicos de los datos
+    const periodos = [...new Set(ingresos.map(i => {
+      return i.fecha ? i.fecha.substring(0, 7) : null;
+    }))].filter(Boolean).sort().reverse();
 
-      tablaIngresos.appendChild(fila);
+    const nombresMeses = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+
+    periodos.forEach(p => {
+      const [anio, mes] = p.split('-');
+      const option = document.createElement('option');
+      option.value = p;
+      option.textContent = `${nombresMeses[parseInt(mes)-1]} ${anio}`;
+      grupoMesesHistorial.appendChild(option);
     });
   }
+
+  function renderizarTabla() {
+    tablaIngresos.innerHTML = "";
+    const filtro = filtroMesDinamico.value;
+    
+    let datosFiltrados = ingresos;
+
+    // Lógica de Filtrado "Dentro del Entorno"
+    if (filtro === "actual") {
+      const hoy = new Date();
+      const mesActual = (hoy.getMonth() + 1).toString().padStart(2, '0');
+      const anioActual = hoy.getFullYear();
+      const periodoActual = `${anioActual}-${mesActual}`;
+      datosFiltrados = ingresos.filter(i => i.fecha && i.fecha.startsWith(periodoActual));
+    } else if (filtro !== "todos") {
+      datosFiltrados = ingresos.filter(i => i.fecha && i.fecha.startsWith(filtro));
+    }
+
+    // Mostrar u ocultar mensaje de vacío
+    if (datosFiltrados.length === 0) {
+      mensajeVacio.classList.remove('hidden');
+    } else {
+      mensajeVacio.classList.add('hidden');
+      
+      datosFiltrados.forEach(i => {
+        const fila = document.createElement('tr');
+        const nombreMostrar = i.nombre_alumno || 'Sin nombre';
+        
+        fila.innerHTML = `
+          <td>${nombreMostrar}</td>
+          <td>${i.tipo}</td>
+          <td>$${Number(i.monto).toLocaleString('es-AR')}</td>
+          <td>${i.fecha || 'S/F'}</td>
+          <td>
+            <button class="btn-editar" data-id="${i.id}">✏️</button>
+            <button class="eliminar" data-id="${i.id}">❌</button>
+          </td>
+        `;
+        
+        // Evento Eliminar
+        fila.querySelector('.eliminar').addEventListener('click', async () => {
+          if(confirm(`¿Eliminar registro de ${nombreMostrar}?`)) {
+            await fetch(`/api/ingresos/${i.id}`, { method: 'DELETE' });
+            cargarIngresos();
+          }
+        });
+
+        // Evento Editar
+        fila.querySelector('.btn-editar').addEventListener('click', () => {
+          prepararEdicion(i);
+        });
+
+        tablaIngresos.appendChild(fila);
+      });
+    }
+  }
+
+  // Escuchar cuando el usuario cambia el mes en el selector
+  filtroMesDinamico.addEventListener('change', renderizarTabla);
 
   function prepararEdicion(ingreso) {
     formTitulo.textContent = "Editando alumno";
@@ -140,57 +187,11 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   
   btnVerLista.addEventListener('click', () => {
+    filtroMesDinamico.value = "actual"; // Resetear al mes actual al entrar
     mostrar(listaSection);
     cargarIngresos();
   });
 
-  // Resumen Mes Actual
-  btnMesActual.addEventListener('click', () => {
-    const hoy = new Date();
-    const mes = hoy.getMonth() + 1;
-    const anio = hoy.getFullYear();
-    const ingresosMes = ingresos.filter(i => {
-      if(!i.fecha) return false;
-      const p = i.fecha.split('-'); 
-      return parseInt(p[1]) === mes && parseInt(p[0]) === anio;
-    });
-    const total = ingresosMes.reduce((acc, i) => acc + Number(i.monto), 0);
-    resultadoResumen.innerHTML = `<strong>Total ${mes}/${anio}: $${total.toLocaleString('es-AR')}</strong>`;
-    tablaMeses.classList.add('hidden');
-  });
-
-  // Meses Anteriores (Orden Inverso: Diciembre a Enero)
-  btnMesesAnteriores.addEventListener('click', () => {
-    const hoy = new Date();
-    const anioAnterior = hoy.getFullYear() - 1;
-    cuerpoTabla.innerHTML = "";
-
-    const nombresMeses = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
-
-    // Invertimos el orden para que Diciembre sea el primero en la lista
-    const mesesInvertidos = nombresMeses.map((nombre, idx) => ({ 
-        nombre, 
-        numero: idx + 1 
-    })).reverse();
-
-    mesesInvertidos.forEach(mes => {
-        const mesIngresos = ingresos.filter(ing => {
-            if(!ing.fecha) return false;
-            const p = ing.fecha.split('-');
-            return parseInt(p[1]) === mes.numero && parseInt(p[0]) === anioAnterior;
-        });
-
-        const total = mesIngresos.reduce((acc, ing) => acc + Number(ing.monto), 0);
-        
-        const fila = document.createElement('tr');
-        fila.innerHTML = `<td>${mes.nombre} ${anioAnterior}</td><td>$${total.toLocaleString('es-AR')}</td>`;
-        cuerpoTabla.appendChild(fila);
-    });
-
-    resultadoResumen.textContent = `Ingresos de ${anioAnterior}`;
-    tablaMeses.classList.remove('hidden');
-  });
- // --- EL GATILLO AUTOMÁTICO ---
-  // Ejecutamos esto para que 'ingresos' ya tenga datos apenas abre la app
+  // Gatillo inicial
   cargarIngresos();
-}); // CIERRE FINAL CORRECTO DEL DOMContentLoaded
+});
