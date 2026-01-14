@@ -190,5 +190,7 @@ document.addEventListener('DOMContentLoaded', () => {
     resultadoResumen.textContent = `Ingresos de ${anioAnterior}`;
     tablaMeses.classList.remove('hidden');
   });
-
+ // --- EL GATILLO AUTOMÁTICO ---
+  // Ejecutamos esto para que 'ingresos' ya tenga datos apenas abre la app
+  cargarIngresos();
 }); // CIERRE FINAL CORRECTO DEL DOMContentLoaded
