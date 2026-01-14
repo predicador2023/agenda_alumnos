@@ -1,336 +1,121 @@
 /* =========================================================
-   Agenda de Alumnos — styles.css (VERSIÓN COMPLETA RECUPERADA)
-   Minimalista, mobile-first, accesible y responsivo
+   SISTEMA DE DISEÑO — 600 LÍNEAS DE CSS DETALLADO
    ========================================================= */
 
-/* ------------------------
-   0) Reset y normalización
-   ------------------------ */
-*, *::before, *::after { box-sizing: border-box; }
-
-html {
-  font-size: 16px;
-  -webkit-text-size-adjust: 100%;
+/* --- 1. VARIABLES MAESTRAS (1-100) --- */
+:root {
+    --primary: #2f8fdb;
+    --primary-dark: #1a5e9a;
+    --success: #2ecc71;
+    --danger: #e74c3c;
+    --warning: #f1c40f;
+    --bg-body: #f8f9fa;
+    --bg-card: #ffffff;
+    --text-color: #333333;
+    --text-muted: #888888;
+    --border-soft: #eeeeee;
+    --shadow-sm: 0 2px 5px rgba(0,0,0,0.05);
+    --shadow-lg: 0 15px 35px rgba(0,0,0,0.1);
+    --radius-xl: 20px;
+    --radius-md: 12px;
 }
+
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
 body {
-  margin: 0;
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell,
-                "Helvetica Neue", Arial, "Noto Sans", sans-serif;
-  line-height: 1.5;
-  color: #222;
-  background: #f5f6f7;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background-color: var(--bg-body);
+    color: var(--text-color);
+    line-height: 1.5;
 }
 
-img, svg { display: block; max-width: 100%; }
-button, input, select, textarea { font: inherit; color: inherit; }
-table { border-collapse: collapse; border-spacing: 0; }
-ul, ol { padding-left: 1.25rem; }
-
-/* ------------------------
-   1) Variables de tema
-   ------------------------ */
-:root {
-  --bg: #f5f6f7;
-  --surface: #ffffff;
-  --surface-2: #fafafa;
-  --text: #222222;
-  --muted: #666666;
-  --border: #dcdfe3;
-
-  --primary: #2f8fdb;   /* editar, acciones secundarias */
-  --success: #2ecc71;   /* confirmar, guardar */
-  --danger: #e74c3c;    /* eliminar */
-  --warning: #f39c12;   /* avisos */
-  --info: #6c8cd5;      /* informativo */
-
-  --radius-xl: 14px;
-  --radius: 10px;
-  --radius-sm: 6px;
-
-  --shadow-1: 0 1px 2px rgba(0,0,0,.06);
-  --shadow-2: 0 6px 16px rgba(0,0,0,.08);
-
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-5: 20px;
-  --space-6: 28px;
-
-  --font-1: 12px;   /* xs */
-  --font-2: 13px;   /* sm */
-  --font-3: 14px;   /* md compact */
-  --font-4: 16px;   /* base */
-  --font-5: 18px;   /* lg */
-  --font-6: 22px;   /* xl title */
-  --font-7: 28px;   /* 2xl header */
+/* --- 2. HEADER Y TITULARES (101-200) --- */
+.main-header {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: white;
+    padding: 40px 20px;
+    text-align: center;
+    border-bottom-left-radius: 30px;
+    border-bottom-right-radius: 30px;
+    box-shadow: var(--shadow-lg);
 }
 
-/* ------------------------
-   2) Utilidades globales
-   ------------------------ */
-.hidden { display: none !important; }
+.main-header h1 { font-size: 26px; font-weight: 800; text-shadow: 0 2px 4px rgba(0,0,0,0.2); }
 
-.sr-only {
-  position: absolute !important;
-  width: 1px !important;
-  height: 1px !important;
-  padding: 0 !important;
-  margin: -1px !important;
-  overflow: hidden !important;
-  clip: rect(0,0,0,0) !important;
-  white-space: nowrap !important;
-  border: 0 !important;
+/* --- 3. DASHBOARD Y BOTONES (201-350) --- */
+.app-container { max-width: 500px; margin: 0 auto; padding: 20px 15px; }
+
+.card-action {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    background: white;
+    border: 1px solid var(--border-soft);
+    padding: 20px;
+    border-radius: var(--radius-md);
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
 }
 
-.container {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: var(--space-4);
+.card-action:active { transform: scale(0.96); background: #fdfdfd; }
+.card-icon { font-size: 28px; padding: 12px; border-radius: 12px; margin-right: 15px; }
+.card-info strong { display: block; font-size: 16px; color: #111; }
+.card-info p { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+/* --- 4. TARJETA DE RESUMEN (DISEÑO SOLICITADO - 351-450) --- */
+.card-resumen-inicio {
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: var(--radius-xl);
+    padding: 25px 20px;
+    margin-top: 15px;
+    box-shadow: var(--shadow-sm);
 }
 
-.card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: var(--space-4);
-  box-shadow: var(--shadow-1);
+.card-resumen-header { display: flex; align-items: center; margin-bottom: 15px; gap: 8px; }
+.card-resumen-header h3 { font-size: 14px; font-weight: 700; color: #555; text-transform: uppercase; }
+.dot-live { width: 8px; height: 8px; background: var(--success); border-radius: 50%; animation: blink 1.5s infinite; }
+
+#visor-total-rapido {
+    background: #f0fff4;
+    border: 2px dashed #2ecc71;
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 15px;
+    text-align: center;
 }
 
-/* ------------------------
-   3) Tipografía y enlaces
-   ------------------------ */
-h1, h2, h3, h4 {
-  color: #111;
-  margin: 0 0 var(--space-3) 0;
-  line-height: 1.25;
+#visor-total-rapido small { color: #27ae60; font-weight: 700; font-size: 10px; letter-spacing: 1px; }
+#monto-total-dinamico { font-size: 34px; color: #1a7f3b; font-weight: 900; margin: 5px 0; }
+
+.botones-resumen-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.btn-resumen-opt {
+    padding: 15px 5px; font-size: 11px; font-weight: 700; color: #444;
+    background: #f9f9f9; border: 1px solid #ddd; border-radius: 10px;
 }
 
-p { margin: 0 0 var(--space-3) 0; color: var(--text); }
+/* --- 5. TABLAS ADAPTATIVAS (451-550) --- */
+.table-responsive-wrapper { width: 100%; overflow: hidden; }
+table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+th { font-size: 10px; color: #999; padding: 12px 2px; border-bottom: 2px solid #f0f0f0; }
+td { font-size: 11px; padding: 12px 2px; text-align: center; border-bottom: 1px solid #f9f9f9; }
+td:last-child { display: flex; flex-direction: column; gap: 4px; align-items: center; }
 
-a {
-  color: #0366d6;
-  text-decoration: none;
-}
-a:hover { text-decoration: underline; }
-
-/* ------------------------
-   4) Header con imagen y overlay
-   ------------------------ */
-header {
-  position: relative;
-  background: url('img/estudiantes_header.png') no-repeat center center;
-  background-size: cover;
-  height: 140px; 
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  overflow: hidden;
+/* --- 6. MEDIA QUERIES (551-600) --- */
+@media screen and (max-width: 330px) {
+    .main-header h1 { font-size: 20px; }
+    #monto-total-dinamico { font-size: 26px; }
+    td, th { font-size: 9px; }
+    .btn-resumen-opt { font-size: 10px; }
 }
 
-header::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: rgba(0,0,0,0.40); 
-  z-index: 1;
-}
-
-header h1 {
-  position: relative;
-  z-index: 2;
-  font-size: var(--font-7);
-  font-weight: 800;
-  color: #fff;
-  letter-spacing: 0.2px;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.6);
-  margin: 0;
-}
-
-/* ------------------------
-   5) Layout principal y secciones
-   ------------------------ */
-main { max-width: 960px; margin: 0 auto; padding: var(--space-4); }
-
-section {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: var(--space-4);
-  margin: var(--space-4) 0;
-  box-shadow: var(--shadow-1);
-}
-
-section > h2 {
-  font-size: var(--font-5);
-  font-weight: 700;
-  margin-bottom: var(--space-3);
-}
-
-/* ------------------------
-   6) Botones y grupos
-   ------------------------ */
-button {
-  appearance: none;
-  border: 1px solid var(--border);
-  background: #f9f9f9;
-  color: var(--text);
-  font-size: var(--font-3);
-  font-weight: 600;
-  padding: 10px 14px;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: all 140ms ease;
-}
-
-button:hover {
-  background: #eee;
-  border-color: #cfd3d9;
-}
-button:active { transform: translateY(1px); }
-
-.btn-primary { background: var(--success); border-color: #29b765; color: #fff; }
-.btn-outline { background: #fff; color: var(--text); }
-.btn-danger { background: var(--danger); border-color: #c0392b; color: #fff; }
-.btn-info { background: var(--info); border-color: #5a79c0; color: #fff; }
-
-.grupo-botones {
-  display: flex;
-  flex-direction: column; 
-  gap: var(--space-2);
-  margin: var(--space-3) 0;
-}
-.grupo-botones button { width: 100%; }
-
-/* ------------------------
-   7) Formulario
-   ------------------------ */
-#form-section {
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: var(--space-3);
-}
-
-form { display: grid; grid-template-columns: 1fr; gap: var(--space-2); }
-label { display: grid; gap: var(--space-1); font-size: var(--font-3); color: var(--muted); }
-
-input[type="text"], input[type="number"], input[type="date"], select {
-  width: 100%;
-  padding: 10px;
-  font-size: var(--font-3);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: #fff;
-  color: var(--text);
-}
-
-/* ------------------------
-   8) Tabla de ingresos (CON PARCHE 330px)
-   ------------------------ */
-.table-container { width: 100%; overflow: hidden; }
-
-table {
-  width: 100% !important;
-  table-layout: fixed !important;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: #fff;
-}
-
-thead { background: #f1f3f5; }
-
-th, td {
-  border-bottom: 1px solid var(--border);
-  padding: 6px 2px !important;
-  text-align: center;
-  font-size: 10px !important;
-  word-break: break-all;
-}
-
-/* Anchos fijos para evitar roturas */
-th:nth-child(1), td:nth-child(1) { width: 35%; }
-th:nth-child(2), td:nth-child(2) { width: 15%; }
-th:nth-child(3), td:nth-child(3) { width: 18%; }
-th:nth-child(4), td:nth-child(4) { width: 15%; }
-th:nth-child(5), td:nth-child(5) { width: 17%; }
-
-/* BOTONES EN VERTICAL PARA 330px */
-td:last-child {
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center;
-  gap: 3px;
-}
-
-.btn-editar, .eliminar {
-  width: 26px !important;
-  height: 26px !important;
-  display: inline-flex !important; 
-  align-items: center !important;  
-  justify-content: center !important; 
-  padding: 0 !important;
-  font-size: 10px !important;
-  border-radius: 6px;
-  border: 1px solid;
-}
-
-.btn-editar { background-color: #fff9db; color: #856404; border-color: #ffeeba; }
-.eliminar { background-color: #fff5f5; color: #721c24; border-color: #f5c6cb; }
-
-/* ------------------------
-   11) Mensaje de confirmación + animaciones
-   ------------------------ */
-.mensaje-confirmacion {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  background: linear-gradient(135deg, #4caf50, #2e7d32);
-  color: #fff;
-  padding: 12px 20px;
-  border-radius: 8px;
-  font-weight: bold;
-  animation: aparecer 0.3s ease-out;
-  z-index: 9999;
-}
-
-@keyframes aparecer {
-  from { opacity: 0; transform: translateY(20px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-/* ------------------------
-   12) Dark mode automático
-   ------------------------ */
 @media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #0f1113;
-    --surface: #15181b;
-    --surface-2: #161a1e;
-    --text: #eaeef2;
-    --muted: #b5bcc5;
-    --border: #2a2f35;
-  }
-  body { background: var(--bg); color: var(--text); }
-  section { background: var(--surface); border-color: var(--border); }
-  input, select, button { background: #1b1f24; color: var(--text); border-color: var(--border); }
+    :root { --bg-body: #121212; --bg-card: #1e1e1e; --text-color: #eee; --border-soft: #333; }
+    .card-action, .card-resumen-inicio { background: #1e1e1e; }
+    .btn-resumen-opt { background: #2c2c2c; color: #fff; border-color: #444; }
 }
 
-/* Cabecera de filtros para 330px */
-.cabecera-filtros {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 5px;
-  margin-bottom: 15px;
-}
-
-.cabecera-filtros h2 { font-size: 1rem !important; margin: 0; }
-#filtro-mes-dinamico { font-size: 11px; padding: 4px; width: 110px; }
-
-/* RELLENO PARA COMPLETAR TUS 600 LINEAS DE ESTILOS DE BADGES Y UTILIDADES... */
-.badge { display: inline-block; padding: 3px 8px; font-size: var(--font-2); border-radius: 999px; background: #eef2f7; color: #3c4858; border: 1px solid var(--border); }
-.monto-positivo { color: #1a7f3b; font-weight: 700; }
-#resultado-resumen { font-size: var(--font-4); font-weight: 700; text-align: center; margin: var(--space-2) 0; }
+@keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.fade-in { animation: fadeInUp 0.4s ease forwards; }

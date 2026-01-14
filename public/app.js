@@ -11,6 +11,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const grupoMesesHistorial = document.getElementById('grupo-meses-historial');
     const mensajeVacio = document.getElementById('mensaje-vacio');
     
+    // Selectores para la nueva lógica de Resumen en Inicio
+    const visorTotalRapido = document.getElementById('visor-total-rapido');
+    const montoTotalDinamico = document.getElementById('monto-total-dinamico');
+    const resultadoResumen = document.getElementById('resultado-resumen');
+
     // Inputs del formulario
     const inputId = document.getElementById('edit-id');
     const inputNombre = document.getElementById('nombre');
@@ -43,16 +48,17 @@ document.addEventListener('DOMContentLoaded', () => {
     // ==========================================
     async function cargarIngresos() {
         try {
-            // Simulamos o llamamos a tu API original
             const response = await fetch('/api/ingresos'); 
             if (!response.ok) throw new Error("Error al obtener datos");
             ingresos = await response.json();
+            
+            // Guardamos backup local por seguridad
+            localStorage.setItem('ingresos_backup', JSON.stringify(ingresos));
             
             actualizarSelectorMeses();
             renderizarTabla();
         } catch (error) {
             console.error("Error cargando ingresos:", error);
-            // Si falla la API, intentamos cargar de LocalStorage como backup
             const local = localStorage.getItem('ingresos_backup');
             if (local) ingresos = JSON.parse(local);
             renderizarTabla();
@@ -95,8 +101,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // 4. LÓGICA DE FILTROS Y TABLA
     // ==========================================
     function actualizarSelectorMeses() {
+        if (!grupoMesesHistorial) return;
         grupoMesesHistorial.innerHTML = "";
-        // Extraer meses únicos de los datos
         const periodos = [...new Set(ingresos.map(i => i.fecha ? i.fecha.substring(0, 7) : null))]
                         .filter(Boolean)
                         .sort()
@@ -114,9 +120,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderizarTabla() {
+        if (!tablaIngresos) return;
         tablaIngresos.innerHTML = "";
         const filtro = filtroMesDinamico.value;
         const mesActual = new Date().toISOString().substring(0, 7);
+        let totalAcumulado = 0;
 
         let filtrados = ingresos;
 
@@ -128,14 +136,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (filtrados.length === 0) {
             mensajeVacio.classList.remove('hidden');
+            if(resultadoResumen) resultadoResumen.textContent = "Total del período: $0";
         } else {
             mensajeVacio.classList.add('hidden');
             filtrados.forEach(ingreso => {
+                totalAcumulado += parseFloat(ingreso.monto);
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td><strong>${ingreso.nombre_alumno}</strong></td>
                     <td>${ingreso.tipo}</td>
-                    <td class="monto-positivo">$${ingreso.monto}</td>
+                    <td class="monto-positivo">$${ingreso.monto.toLocaleString('es-AR')}</td>
                     <td>${ingreso.fecha ? ingreso.fecha.split('-').reverse().join('/') : '--'}</td>
                     <td>
                         <button class="btn-editar" onclick="prepararEdicion(${ingreso.id})">✏️</button>
@@ -144,11 +154,26 @@ document.addEventListener('DOMContentLoaded', () => {
                 `;
                 tablaIngresos.appendChild(tr);
             });
+            if(resultadoResumen) resultadoResumen.innerHTML = `Total del período: <strong>$${totalAcumulado.toLocaleString('es-AR')}</strong>`;
         }
     }
 
     // ==========================================
-    // 5. EVENTOS DE LOS 4 BOTONES DE INICIO
+    // 5. NUEVA LÓGICA: SUMATORIA RÁPIDA EN INICIO
+    // ==========================================
+    function calcularSumatoriaMesActual() {
+        const mesHoy = new Date().toISOString().substring(0, 7);
+        const registrosMes = ingresos.filter(i => i.fecha && i.fecha.startsWith(mesHoy));
+        const sumaTotal = registrosMes.reduce((acc, curr) => acc + parseFloat(curr.monto || 0), 0);
+        
+        if (montoTotalDinamico && visorTotalRapido) {
+            montoTotalDinamico.textContent = `$ ${sumaTotal.toLocaleString('es-AR')}`;
+            visorTotalRapido.classList.remove('hidden');
+        }
+    }
+
+    // ==========================================
+    // 6. EVENTOS DE LOS BOTONES DE INICIO
     // ==========================================
     document.getElementById('btn-ingresar').addEventListener('click', () => {
         formTitulo.textContent = "Nuevo ingreso";
@@ -161,20 +186,19 @@ document.addEventListener('DOMContentLoaded', () => {
         renderizarTabla();
     });
 
+    // BOTÓN CORREGIDO: Ahora calcula la suma sin salir del menú
     document.getElementById('btn-mes-actual-inicio').addEventListener('click', () => {
-        filtroMesDinamico.value = "actual";
-        mostrarSeccion(listaSection);
-        renderizarTabla();
+        calcularSumatoriaMesActual();
     });
 
     document.getElementById('btn-historial-inicio').addEventListener('click', () => {
         mostrarSeccion(listaSection);
         renderizarTabla();
-        filtroMesDinamico.focus(); // Para que el usuario elija el mes del historial
+        filtroMesDinamico.focus(); 
     });
 
     // ==========================================
-    // 6. FUNCIONES DE APOYO Y FEEDBACK
+    // 7. FUNCIONES DE APOYO Y FEEDBACK
     // ==========================================
     window.prepararEdicion = function(id) {
         const item = ingresos.find(i => i.id === id);
@@ -188,6 +212,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
         formTitulo.textContent = "Editar ingreso";
         mostrarSeccion(formSection);
+    };
+
+    window.eliminarIngreso = async function(id) {
+        if (!confirm("¿Seguro que desea eliminar este registro?")) return;
+        try {
+            const res = await fetch(`/api/ingresos/${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                mostrarConfirmacion("Eliminado correctamente");
+                await cargarIngresos();
+            }
+        } catch (error) {
+            console.error("Error al eliminar:", error);
+        }
     };
 
     function mostrarConfirmacion(msj) {
