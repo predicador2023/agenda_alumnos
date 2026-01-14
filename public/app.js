@@ -1,176 +1,81 @@
-// ==========================================
-// 1. VARIABLES GLOBALES Y SELECCIÓN DE DOM
-// ==========================================
+
+// --- VARIABLES ---
 const menuPrincipal = document.getElementById('menu-principal');
 const formSection = document.getElementById('form-section');
 const listaSection = document.getElementById('lista-section');
-const formAlumno = document.getElementById('form-alumno');
 const tablaIngresos = document.getElementById('tabla-ingresos');
 const montoTotalDinamico = document.getElementById('monto-total-dinamico');
-const visorTotalRapido = document.getElementById('visor-total-rapido');
-const filtroMesDinamico = document.getElementById('filtro-mes-dinamico');
-const mensajeVacio = document.getElementById('mensaje-vacio');
 
-// ==========================================
-// 2. FUNCIONES DE LÓGICA CORE
-// ==========================================
-
-// Obtener datos de localStorage
-function obtenerIngresos() {
-    return JSON.parse(localStorage.getItem('ingresos')) || [];
-}
-
-// Guardar datos en localStorage
-function guardarIngresos(ingresos) {
-    localStorage.setItem('ingresos', JSON.stringify(ingresos));
-}
-
-// Generar el historial de meses dinámicamente
-function actualizarSelectorMeses() {
-    const grupoHistorial = document.getElementById('grupo-meses-historial');
-    if (!grupoHistorial) return;
-    
-    grupoHistorial.innerHTML = ''; 
-    const ingresos = obtenerIngresos();
-    const fechaActual = new Date();
-    const mesActualKey = `${fechaActual.getFullYear()}-${String(fechaActual.getMonth() + 1).padStart(2, '0')}`;
-
-    // Obtener meses únicos de los datos guardados
-    const mesesExistentes = [...new Set(ingresos.map(ing => ing.fecha.substring(0, 7)))];
-    // Filtrar para que solo aparezcan los meses anteriores al actual (Enero 2026)
-    const mesesAnteriores = mesesExistentes.filter(mes => mes !== mesActualKey);
-
-    if (mesesAnteriores.length === 0) {
-        const opt = document.createElement('option');
-        opt.disabled = true;
-        opt.textContent = "Sin meses anteriores todavía";
-        grupoHistorial.appendChild(opt);
-    } else {
-        mesesAnteriores.sort().reverse().forEach(mes => {
-            const [year, month] = mes.split('-');
-            const date = new Date(year, month - 1);
-            const nombreMes = new Intl.DateTimeFormat('es-ES', { month: 'long' }).format(date);
-            
-            const option = document.createElement('option');
-            option.value = mes;
-            option.textContent = `${nombreMes.toUpperCase()} ${year}`;
-            grupoHistorial.appendChild(option);
-        });
-    }
-}
-
-// Renderizar la tabla y calcular montos
-function renderizarTabla(filtro = 'actual') {
-    const ingresos = obtenerIngresos();
-    const fechaActual = new Date();
-    const mesActualKey = `${fechaActual.getFullYear()}-${String(fechaActual.getMonth() + 1).padStart(2, '0')}`;
-    
-    let datosFiltrados = [];
-    if (filtro === 'actual') {
-        datosFiltrados = ingresos.filter(ing => ing.fecha.startsWith(mesActualKey));
-    } else if (filtro === 'todos') {
-        datosFiltrados = ingresos;
-    } else {
-        datosFiltrados = ingresos.filter(ing => ing.fecha.startsWith(filtro));
-    }
-
-    tablaIngresos.innerHTML = '';
-    let sumaTotal = 0;
-
-    if (datosFiltrados.length === 0) {
-        mensajeVacio.classList.remove('hidden');
-    } else {
-        mensajeVacio.classList.add('hidden');
-        datosFiltrados.forEach(alumno => {
-            sumaTotal += parseFloat(alumno.monto);
-            const fila = document.createElement('tr');
-            fila.innerHTML = `
-                <td><strong>${alumno.nombre}</strong><br><small>${alumno.tipo}</small></td>
-                <td class="monto-valor">$ ${parseFloat(alumno.monto).toLocaleString('es-AR')}</td>
-                <td>
-                    <button class="btn-borrar" onclick="eliminarRegistro('${alumno.id}')">🗑️</button>
-                </td>
-            `;
-            tablaIngresos.appendChild(fila);
-        });
-    }
-
-    // Actualizar los montos en la interfaz
-    const totalTexto = `$ ${sumaTotal.toLocaleString('es-AR')}`;
-    montoTotalDinamico.innerText = totalTexto;
-    document.getElementById('resultado-resumen').innerText = `Total: ${totalTexto}`;
-}
-
-// Función para eliminar un registro
-window.eliminarRegistro = function(id) {
-    if (confirm("¿Estás seguro de eliminar este registro de pago?")) {
-        const ingresos = obtenerIngresos().filter(ing => ing.id !== id);
-        guardarIngresos(ingresos);
-        renderizarTabla(filtroMesDinamico.value);
-    }
-}
-
-// ==========================================
-// 3. EVENTOS DE NAVEGACIÓN Y FORMULARIO
-// ==========================================
-
-// Botón "Ingresar Alumno"
-document.getElementById('btn-ingresar').addEventListener('click', () => {
+// --- FUNCIÓN PARA MOSTRAR PANTALLAS ---
+function irA(pantalla) {
     menuPrincipal.classList.add('hidden');
-    formSection.classList.remove('hidden');
-    // Setear fecha de hoy por defecto
-    document.getElementById('fecha').value = new Date().toISOString().split('T')[0];
-});
+    formSection.classList.add('hidden');
+    listaSection.classList.add('hidden');
+    pantalla.classList.remove('hidden');
+}
 
-// Botón "Ver lista completa"
-document.getElementById('btn-ver-lista').addEventListener('click', () => {
-    menuPrincipal.classList.add('hidden');
-    listaSection.classList.remove('hidden');
-    filtroMesDinamico.value = 'todos';
-    renderizarTabla('todos');
-});
-
-// Botón "Mes Actual" (Desde Inicio)
-document.getElementById('btn-mes-actual-inicio').addEventListener('click', () => {
-    visorTotalRapido.classList.remove('hidden');
-    renderizarTabla('actual');
-});
-
-// Botón "Meses Anteriores" (Desde Inicio)
-document.getElementById('btn-historial-inicio').addEventListener('click', () => {
-    actualizarSelectorMeses();
-    menuPrincipal.classList.add('hidden');
-    listaSection.classList.remove('hidden');
-    tablaIngresos.innerHTML = '';
-    mensajeVacio.innerHTML = "📅 Seleccioná un mes para ver el historial";
-    mensajeVacio.classList.remove('hidden');
-});
-
-// Cambio en el selector de meses
-filtroMesDinamico.addEventListener('change', (e) => {
-    renderizarTabla(e.target.value);
-});
-
-// Enviar Formulario
-formAlumno.addEventListener('submit', (e) => {
+// --- GUARDAR ---
+document.getElementById('form-alumno').addEventListener('submit', (e) => {
     e.preventDefault();
-    const nuevoIngreso = {
+    const ingresos = JSON.parse(localStorage.getItem('ingresos')) || [];
+    const nuevo = {
         id: Date.now().toString(),
         nombre: document.getElementById('nombre').value,
-        tipo: document.getElementById('tipo').value,
         monto: document.getElementById('monto').value,
-        fecha: document.getElementById('fecha').value
+        fecha: document.getElementById('fecha').value,
+        tipo: document.getElementById('tipo').value
     };
-
-    const ingresos = obtenerIngresos();
-    ingresos.push(nuevoIngreso);
-    guardarIngresos(ingresos);
-    
-    alert("¡Registro guardado con éxito!");
-    location.reload(); // Recarga para volver al inicio prolijamente
+    ingresos.push(nuevo);
+    localStorage.setItem('ingresos', JSON.stringify(ingresos));
+    alert("Guardado correctamente");
+    location.reload();
 });
 
-// Cancelar edición/formulario
-window.cancelarEdicion = function() {
-    location.reload();
+// --- RENDERIZAR (DIBUJAR TABLA Y SUMAR) ---
+function cargarDatos(filtro = 'todos') {
+    const ingresos = JSON.parse(localStorage.getItem('ingresos')) || [];
+    tablaIngresos.innerHTML = '';
+    let suma = 0;
+
+    // Filtramos para ENERO 2026
+    const datos = (filtro === 'actual') 
+        ? ingresos.filter(i => i.fecha.startsWith('2026-01')) 
+        : ingresos;
+
+    datos.forEach(i => {
+        suma += parseFloat(i.monto);
+        tablaIngresos.innerHTML += `
+            <tr>
+                <td><strong>${i.nombre}</strong></td>
+                <td style="color:green; font-weight:bold;">$ ${parseFloat(i.monto).toLocaleString('es-AR')}</td>
+                <td><button onclick="borrar('${i.id}')">🗑️</button></td>
+            </tr>
+        `;
+    });
+
+    montoTotalDinamico.innerText = `$ ${suma.toLocaleString('es-AR')}`;
+    document.getElementById('resultado-resumen').innerText = `Total: $ ${suma.toLocaleString('es-AR')}`;
 }
+
+// --- BOTONES ---
+document.getElementById('btn-ingresar').onclick = () => {
+    irA(formSection);
+    document.getElementById('fecha').value = "2026-01-14";
+};
+
+document.getElementById('btn-ver-lista').onclick = () => {
+    irA(listaSection);
+    cargarDatos('todos');
+};
+
+document.getElementById('btn-mes-actual-inicio').onclick = () => {
+    document.getElementById('visor-total-rapido').classList.remove('hidden');
+    cargarDatos('actual');
+};
+
+window.borrar = (id) => {
+    let ingresos = JSON.parse(localStorage.getItem('ingresos')) || [];
+    ingresos = ingresos.filter(i => i.id !== id);
+    localStorage.setItem('ingresos', JSON.stringify(ingresos));
+    cargarDatos();
+};
