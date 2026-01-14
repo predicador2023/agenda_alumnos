@@ -1,83 +1,114 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <title>Agenda de Ingresos</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <link rel="stylesheet" href="styles.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agenda de Alumnos - Control de Ingresos</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <header>
-    <h1>Agenda de Ingresos</h1>
-  </header>
 
-  <main>
-    <div class="grupo-botones">
-      <button id="btn-ingresar">➕ Ingresar alumno</button>
-      <button id="btn-ver-lista">📋 Ver lista de ingresos</button>
-    </div>
+    <header>
+        <h1>Agenda de Ingresos</h1>
+    </header>
 
-    <section id="form-section" class="hidden">
-      <h2 id="form-titulo">Nuevo ingreso</h2>
-      <form id="form-alumno">
-        <input type="hidden" id="edit-id" value="">
-
-        <label>Nombre:
-          <input type="text" id="nombre" required />
-        </label>
-        <label>Tipo:
-          <select id="tipo" required>
-            <option value="mensual">Mensual</option>
-            <option value="diario">Diario</option>
-          </select>
-        </label>
-        <label>Monto:
-          <input type="number" id="monto" min="0" step="0.01" required />
-        </label>
-        <label>Fecha:
-          <input type="date" id="fecha" />
-        </label>
+    <main class="container">
         
-        <div class="botones-form">
-            <button type="submit" id="btn-submit">Guardar ingreso</button>
-            <button type="button" id="btn-cancelar" class="hidden">Cancelar</button>
-        </div>
-      </form>
-    </section>
+        <section id="menu-principal">
+            <div class="grupo-botones">
+                <button id="btn-ingresar" class="btn-primary">
+                    ➕ Ingresar Nuevo Alumno
+                </button>
+                <button id="btn-ver-lista" class="btn-info">
+                    📋 Ver Lista Completa (Todos)
+                </button>
+                <button id="btn-mes-actual-inicio" class="btn-success" style="background-color: #2ecc71; color: white; border-color: #27ae60;">
+                    📅 Ver Ingresos Mes Actual
+                </button>
+                <button id="btn-historial-inicio" class="btn-warning">
+                    📂 Ver Historial por Meses
+                </button>
+            </div>
+        </section>
 
-    <section id="lista-section" class="hidden">
-      <div class="cabecera-filtros">
-        <h2>Listado</h2>
-        <div class="control-periodo">
-          <select id="filtro-mes-dinamico">
-            <option value="actual">📅 Mes Actual</option>
-            <option value="todos">🌍 Ver Todo</option>
-            <optgroup label="Historial" id="grupo-meses-historial"></optgroup>
-          </select>
-        </div>
-      </div>
+        <section id="form-section" class="hidden">
+            <h2 id="form-titulo">Nuevo registro</h2>
+            <form id="form-alumno">
+                <input type="hidden" id="edit-id">
 
-      <div class="table-container">
-        <table>
-          <thead>
-            <tr>
-              <th>Nombre</th>
-              <th>Tipo</th>
-              <th>Monto</th>
-              <th>Fecha</th>
-              <th>Acc.</th>
-            </tr>
-          </thead>
-          <tbody id="tabla-ingresos"></tbody>
-        </table>
-      </div>
+                <div class="campo">
+                    <label for="nombre">Nombre del Alumno:</label>
+                    <input type="text" id="nombre" placeholder="Ej: Juan Pérez" required>
+                </div>
 
-      <div id="mensaje-vacio" class="hidden">
-        <p>🚫 No hay registros en este período.</p>
-      </div>
-    </section>
-  </main>
+                <div class="campo">
+                    <label for="tipo">Tipo de Pago:</label>
+                    <select id="tipo">
+                        <option value="Mensual">Mensual</option>
+                        <option value="Diario">Diario</option>
+                        <option value="Inscripción">Inscripción</option>
+                    </select>
+                </div>
 
-  <script src="app.js"></script>
+                <div class="campo">
+                    <label for="monto">Monto ($):</label>
+                    <input type="number" id="monto" placeholder="0.00" step="0.01" required>
+                </div>
+
+                <div class="campo">
+                    <label for="fecha">Fecha de Ingreso:</label>
+                    <input type="date" id="fecha">
+                </div>
+
+                <div class="grupo-botones-form">
+                    <button type="submit" class="btn-primary" id="btn-submit">Guardar Registro</button>
+                    <button type="button" class="btn-outline" onclick="cancelarEdicion()">Cancelar</button>
+                </div>
+            </form>
+        </section>
+
+        <section id="lista-section" class="hidden">
+            <div class="cabecera-filtros">
+                <h2>Listado de Ingresos</h2>
+                <select id="filtro-mes-dinamico">
+                    <option value="actual">📅 Mes Actual</option>
+                    <option value="todos">🌍 Ver Todo</option>
+                    <optgroup label="Historial" id="grupo-meses-historial">
+                        </optgroup>
+                </select>
+            </div>
+
+            <div class="table-container">
+                <table id="tabla-principal">
+                    <thead>
+                        <tr>
+                            <th>Alumno</th>
+                            <th>Tipo</th>
+                            <th>Monto</th>
+                            <th>Fecha</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-ingresos">
+                        </tbody>
+                </table>
+            </div>
+
+            <div id="mensaje-vacio" class="hidden">
+                <p>No se encontraron registros para este período.</p>
+            </div>
+
+            <div id="resumen-final">
+                <p id="resultado-resumen">Total del período: $0.00</p>
+            </div>
+
+            <button class="btn-volver" onclick="location.reload()" style="width: 100%; margin-top: 20px;">
+                🔙 Volver al Inicio
+            </button>
+        </section>
+
+    </main>
+
+    <script src="app.js"></script>
 </body>
 </html>

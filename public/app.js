@@ -1,187 +1,205 @@
 document.addEventListener('DOMContentLoaded', () => {
-  // Elementos del DOM
-  const btnIngresar = document.getElementById('btn-ingresar');
-  const btnVerLista = document.getElementById('btn-ver-lista');
-  const formSection = document.getElementById('form-section');
-  const listaSection = document.getElementById('lista-section');
-  const form = document.getElementById('form-alumno');
-  const tablaIngresos = document.getElementById('tabla-ingresos');
-  const formTitulo = document.getElementById('form-titulo');
-  const btnSubmit = document.getElementById('btn-submit');
-  const btnCancelar = document.getElementById('btn-cancelar');
-  const editIdInput = document.getElementById('edit-id');
-  
-  // Elementos del Filtro Estrella
-  const filtroMesDinamico = document.getElementById('filtro-mes-dinamico');
-  const grupoMesesHistorial = document.getElementById('grupo-meses-historial');
-  const mensajeVacio = document.getElementById('mensaje-vacio');
-
-  let ingresos = [];
-
-  function mostrar(seccion) {
-    [formSection, listaSection].forEach(s => s.classList.add('hidden'));
-    seccion.classList.remove('hidden');
-  }
-
-  // 1. Cargar ingresos desde la API
-  async function cargarIngresos() {
-    try {
-      const res = await fetch('/api/ingresos');
-      ingresos = await res.json();
-      
-      actualizarMenuMeses(); // Poblar el selector de meses
-      renderizarTabla();     // Dibujar la tabla según el filtro
-    } catch (error) {
-      console.error("Error al cargar lista:", error);
-    }
-  }
-
-  // Llena el selector con los meses que existen en la base de datos
-  function actualizarMenuMeses() {
-    if (!grupoMesesHistorial) return;
-    grupoMesesHistorial.innerHTML = ""; 
-
-    const periodos = [...new Set(ingresos.map(i => {
-      return i.fecha ? i.fecha.substring(0, 7) : null;
-    }))].filter(Boolean).sort().reverse();
-
-    const nombresMeses = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
-
-    periodos.forEach(p => {
-      const [anio, mes] = p.split('-');
-      const option = document.createElement('option');
-      option.value = p;
-      option.textContent = `${nombresMeses[parseInt(mes)-1]} ${anio}`;
-      grupoMesesHistorial.appendChild(option);
-    });
-  }
-
-  function renderizarTabla() {
-    tablaIngresos.innerHTML = "";
-    const filtro = filtroMesDinamico.value;
+    // ==========================================
+    // 1. SELECTORES Y VARIABLES GLOBALES
+    // ==========================================
+    const menuPrincipal = document.getElementById('menu-principal');
+    const formSection = document.getElementById('form-section');
+    const listaSection = document.getElementById('lista-section');
+    const formAlumno = document.getElementById('form-alumno');
+    const tablaIngresos = document.getElementById('tabla-ingresos');
+    const filtroMesDinamico = document.getElementById('filtro-mes-dinamico');
+    const grupoMesesHistorial = document.getElementById('grupo-meses-historial');
+    const mensajeVacio = document.getElementById('mensaje-vacio');
     
-    let datosFiltrados = ingresos;
+    // Inputs del formulario
+    const inputId = document.getElementById('edit-id');
+    const inputNombre = document.getElementById('nombre');
+    const inputTipo = document.getElementById('tipo');
+    const inputMonto = document.getElementById('monto');
+    const inputFecha = document.getElementById('fecha');
+    const formTitulo = document.getElementById('form-titulo');
 
-    // Filtrado por mes
-    if (filtro === "actual") {
-      const hoy = new Date();
-      const mesActual = (hoy.getMonth() + 1).toString().padStart(2, '0');
-      const anioActual = hoy.getFullYear();
-      const periodoActual = `${anioActual}-${mesActual}`;
-      datosFiltrados = ingresos.filter(i => i.fecha && i.fecha.startsWith(periodoActual));
-    } else if (filtro !== "todos") {
-      datosFiltrados = ingresos.filter(i => i.fecha && i.fecha.startsWith(filtro));
+    let ingresos = [];
+
+    // ==========================================
+    // 2. FUNCIONES DE NAVEGACIÓN
+    // ==========================================
+    function mostrarSeccion(seccion) {
+        menuPrincipal.classList.add('hidden');
+        formSection.classList.add('hidden');
+        listaSection.classList.add('hidden');
+        seccion.classList.remove('hidden');
     }
 
-    if (datosFiltrados.length === 0) {
-      mensajeVacio.classList.remove('hidden');
-    } else {
-      mensajeVacio.classList.add('hidden');
-      
-      datosFiltrados.forEach(i => {
-        const fila = document.createElement('tr');
-        const nombreMostrar = i.nombre_alumno || 'Sin nombre';
-        
-        fila.innerHTML = `
-          <td>${nombreMostrar}</td>
-          <td>${i.tipo}</td>
-          <td>$${Number(i.monto).toLocaleString('es-AR')}</td>
-          <td>${i.fecha || 'S/F'}</td>
-          <td>
-            <button class="btn-editar" data-id="${i.id}">✏️</button>
-            <button class="eliminar" data-id="${i.id}">❌</button>
-          </td>
-        `;
-        
-        fila.querySelector('.eliminar').addEventListener('click', async () => {
-          if(confirm(`¿Eliminar registro de ${nombreMostrar}?`)) {
-            await fetch(`/api/ingresos/${i.id}`, { method: 'DELETE' });
-            cargarIngresos();
-          }
-        });
-
-        fila.querySelector('.btn-editar').addEventListener('click', () => {
-          prepararEdicion(i);
-        });
-
-        tablaIngresos.appendChild(fila);
-      });
-    }
-  }
-
-  // Evento para cuando el usuario cambia de mes
-  filtroMesDinamico.addEventListener('change', renderizarTabla);
-
-  function prepararEdicion(ingreso) {
-    formTitulo.textContent = "Editando alumno";
-    btnSubmit.textContent = "Confirmar";
-    btnCancelar.classList.remove('hidden');
-    formSection.classList.add('modo-edicion');
-
-    editIdInput.value = ingreso.id;
-    document.getElementById('nombre').value = ingreso.nombre_alumno;
-    document.getElementById('tipo').value = ingreso.tipo;
-    document.getElementById('monto').value = ingreso.monto;
-    document.getElementById('fecha').value = ingreso.fecha;
-
-    mostrar(formSection);
-    window.scrollTo(0, 0);
-  }
-
-  window.cancelarEdicion = () => {
-    form.reset();
-    editIdInput.value = "";
-    formTitulo.textContent = "Nuevo ingreso";
-    btnSubmit.textContent = "Guardar ingreso";
-    btnCancelar.classList.add('hidden');
-    formSection.classList.remove('modo-edicion');
-  };
-
-  btnCancelar.addEventListener('click', cancelarEdicion);
-
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const idParaEditar = editIdInput.value;
-    const datos = {
-      nombre_alumno: document.getElementById('nombre').value.trim(),
-      tipo: document.getElementById('tipo').value,
-      monto: parseFloat(document.getElementById('monto').value),
-      fecha: document.getElementById('fecha').value || new Date().toISOString().split('T')[0]
+    window.cancelarEdicion = function() {
+        formAlumno.reset();
+        inputId.value = "";
+        formTitulo.textContent = "Nuevo ingreso";
+        mostrarSeccion(menuPrincipal);
     };
 
-    try {
-      let url = '/api/ingresos';
-      let metodo = 'POST';
-      if (idParaEditar) {
-        url = `/api/ingresos/${idParaEditar}`;
-        metodo = 'PUT';
-      }
-      const res = await fetch(url, {
-        method: metodo,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(datos)
-      });
-      if (res.ok) {
-        cancelarEdicion();
-        await cargarIngresos();
-        mostrar(listaSection);
-      }
-    } catch (error) {
-      alert("Error: " + error.message);
+    // ==========================================
+    // 3. GESTIÓN DE DATOS (CRUD ORIGINAL)
+    // ==========================================
+    async function cargarIngresos() {
+        try {
+            // Simulamos o llamamos a tu API original
+            const response = await fetch('/api/ingresos'); 
+            if (!response.ok) throw new Error("Error al obtener datos");
+            ingresos = await response.json();
+            
+            actualizarSelectorMeses();
+            renderizarTabla();
+        } catch (error) {
+            console.error("Error cargando ingresos:", error);
+            // Si falla la API, intentamos cargar de LocalStorage como backup
+            const local = localStorage.getItem('ingresos_backup');
+            if (local) ingresos = JSON.parse(local);
+            renderizarTabla();
+        }
     }
-  });
 
-  btnIngresar.addEventListener('click', () => {
-    cancelarEdicion();
-    mostrar(formSection);
-  });
-  
-  btnVerLista.addEventListener('click', () => {
-    filtroMesDinamico.value = "actual"; 
-    mostrar(listaSection);
+    async function guardarIngreso(e) {
+        e.preventDefault();
+        const datos = {
+            nombre_alumno: inputNombre.value.trim(),
+            tipo: inputTipo.value,
+            monto: parseFloat(inputMonto.value),
+            fecha: inputFecha.value || new Date().toISOString().split('T')[0]
+        };
+
+        const id = inputId.value;
+        const url = id ? `/api/ingresos/${id}` : '/api/ingresos';
+        const method = id ? 'PUT' : 'POST';
+
+        try {
+            const res = await fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(datos)
+            });
+
+            if (res.ok) {
+                mostrarConfirmacion(id ? "Actualizado correctamente" : "Guardado con éxito");
+                formAlumno.reset();
+                inputId.value = "";
+                await cargarIngresos();
+                mostrarSeccion(menuPrincipal);
+            }
+        } catch (error) {
+            console.error("Error al guardar:", error);
+        }
+    }
+
+    // ==========================================
+    // 4. LÓGICA DE FILTROS Y TABLA
+    // ==========================================
+    function actualizarSelectorMeses() {
+        grupoMesesHistorial.innerHTML = "";
+        // Extraer meses únicos de los datos
+        const periodos = [...new Set(ingresos.map(i => i.fecha ? i.fecha.substring(0, 7) : null))]
+                        .filter(Boolean)
+                        .sort()
+                        .reverse();
+
+        periodos.forEach(periodo => {
+            const [year, month] = periodo.split('-');
+            const nombresMeses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", 
+                                  "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+            const option = document.createElement('option');
+            option.value = periodo;
+            option.textContent = `${nombresMeses[parseInt(month)-1]} ${year}`;
+            grupoMesesHistorial.appendChild(option);
+        });
+    }
+
+    function renderizarTabla() {
+        tablaIngresos.innerHTML = "";
+        const filtro = filtroMesDinamico.value;
+        const mesActual = new Date().toISOString().substring(0, 7);
+
+        let filtrados = ingresos;
+
+        if (filtro === "actual") {
+            filtrados = ingresos.filter(i => i.fecha && i.fecha.startsWith(mesActual));
+        } else if (filtro !== "todos") {
+            filtrados = ingresos.filter(i => i.fecha && i.fecha.startsWith(filtro));
+        }
+
+        if (filtrados.length === 0) {
+            mensajeVacio.classList.remove('hidden');
+        } else {
+            mensajeVacio.classList.add('hidden');
+            filtrados.forEach(ingreso => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>${ingreso.nombre_alumno}</strong></td>
+                    <td>${ingreso.tipo}</td>
+                    <td class="monto-positivo">$${ingreso.monto}</td>
+                    <td>${ingreso.fecha ? ingreso.fecha.split('-').reverse().join('/') : '--'}</td>
+                    <td>
+                        <button class="btn-editar" onclick="prepararEdicion(${ingreso.id})">✏️</button>
+                        <button class="eliminar" onclick="eliminarIngreso(${ingreso.id})">❌</button>
+                    </td>
+                `;
+                tablaIngresos.appendChild(tr);
+            });
+        }
+    }
+
+    // ==========================================
+    // 5. EVENTOS DE LOS 4 BOTONES DE INICIO
+    // ==========================================
+    document.getElementById('btn-ingresar').addEventListener('click', () => {
+        formTitulo.textContent = "Nuevo ingreso";
+        mostrarSeccion(formSection);
+    });
+
+    document.getElementById('btn-ver-lista').addEventListener('click', () => {
+        filtroMesDinamico.value = "todos";
+        mostrarSeccion(listaSection);
+        renderizarTabla();
+    });
+
+    document.getElementById('btn-mes-actual-inicio').addEventListener('click', () => {
+        filtroMesDinamico.value = "actual";
+        mostrarSeccion(listaSection);
+        renderizarTabla();
+    });
+
+    document.getElementById('btn-historial-inicio').addEventListener('click', () => {
+        mostrarSeccion(listaSection);
+        renderizarTabla();
+        filtroMesDinamico.focus(); // Para que el usuario elija el mes del historial
+    });
+
+    // ==========================================
+    // 6. FUNCIONES DE APOYO Y FEEDBACK
+    // ==========================================
+    window.prepararEdicion = function(id) {
+        const item = ingresos.find(i => i.id === id);
+        if (!item) return;
+
+        inputId.value = item.id;
+        inputNombre.value = item.nombre_alumno;
+        inputTipo.value = item.tipo;
+        inputMonto.value = item.monto;
+        inputFecha.value = item.fecha;
+
+        formTitulo.textContent = "Editar ingreso";
+        mostrarSeccion(formSection);
+    };
+
+    function mostrarConfirmacion(msj) {
+        const div = document.createElement('div');
+        div.className = 'mensaje-confirmacion';
+        div.innerHTML = `<span class="icono-check">✔</span> ${msj}`;
+        document.body.appendChild(div);
+        setTimeout(() => div.remove(), 3000);
+    }
+
+    // Inicialización
+    formAlumno.addEventListener('submit', guardarIngreso);
+    filtroMesDinamico.addEventListener('change', renderizarTabla);
     cargarIngresos();
-  });
-
-  // Carga inicial
-  cargarIngresos();
 });
