@@ -13,8 +13,8 @@
 
   <main>
     <div class="grupo-botones">
-      <button id="btn-ingresar">Ingresar alumno</button>
-      <button id="btn-ver-lista">Ver lista de ingresos</button>
+      <button id="btn-ingresar">➕ Ingresar alumno</button>
+      <button id="btn-ver-lista">📋 Ver lista de ingresos</button>
     </div>
 
     <section id="form-section" class="hidden">
@@ -40,41 +40,40 @@
         
         <div class="botones-form">
             <button type="submit" id="btn-submit">Guardar ingreso</button>
-            <button type="button" id="btn-cancelar" class="hidden">Cancelar Edición</button>
+            <button type="button" id="btn-cancelar" class="hidden">Cancelar</button>
         </div>
       </form>
     </section>
 
     <section id="lista-section" class="hidden">
-      <div class="cabecera-filtros" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 10px;">
-        <h2>Listado de Ingresos</h2>
-        
-        <div id="contenedor-selector">
-          <label for="filtro-mes-dinamico">Ver mes: </label>
+      <div class="cabecera-filtros">
+        <h2>Listado</h2>
+        <div class="control-periodo">
           <select id="filtro-mes-dinamico">
             <option value="actual">📅 Mes Actual</option>
-            <option value="todos">🌍 Todo el historial</option>
-            <optgroup label="Meses anteriores" id="grupo-meses-historial">
-              </optgroup>
+            <option value="todos">🌍 Ver Todo</option>
+            <optgroup label="Historial" id="grupo-meses-historial"></optgroup>
           </select>
         </div>
       </div>
 
-      <table id="tabla-principal">
-        <thead>
-          <tr>
-            <th>Nombre</th>
-            <th>Tipo</th>
-            <th>Monto</th>
-            <th>Fecha</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody id="tabla-ingresos"></tbody>
-      </table>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Tipo</th>
+              <th>Monto</th>
+              <th>Fecha</th>
+              <th>Acc.</th>
+            </tr>
+          </thead>
+          <tbody id="tabla-ingresos"></tbody>
+        </table>
+      </div>
 
-      <div id="mensaje-vacio" class="hidden" style="text-align: center; padding: 20px; color: #666;">
-        <p>🚫 No hay ingresos registrados en este período.</p>
+      <div id="mensaje-vacio" class="hidden">
+        <p>🚫 No hay registros en este período.</p>
       </div>
     </section>
   </main>

@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnCancelar = document.getElementById('btn-cancelar');
   const editIdInput = document.getElementById('edit-id');
   
-  // Nuevos elementos del Filtro Estrella
+  // Elementos del Filtro Estrella
   const filtroMesDinamico = document.getElementById('filtro-mes-dinamico');
   const grupoMesesHistorial = document.getElementById('grupo-meses-historial');
   const mensajeVacio = document.getElementById('mensaje-vacio');
@@ -23,25 +23,24 @@ document.addEventListener('DOMContentLoaded', () => {
     seccion.classList.remove('hidden');
   }
 
-  // 1. Cargar ingresos (Read)
+  // 1. Cargar ingresos desde la API
   async function cargarIngresos() {
     try {
       const res = await fetch('/api/ingresos');
       ingresos = await res.json();
       
-      actualizarMenuMeses(); // Llenamos el selector con los meses que existen
-      renderizarTabla();     // Dibujamos la tabla (por defecto mes actual)
+      actualizarMenuMeses(); // Poblar el selector de meses
+      renderizarTabla();     // Dibujar la tabla según el filtro
     } catch (error) {
       console.error("Error al cargar lista:", error);
     }
   }
 
-  // FUNCIÓN ESTRELLA: Llena el selector con meses reales de tus datos
+  // Llena el selector con los meses que existen en la base de datos
   function actualizarMenuMeses() {
     if (!grupoMesesHistorial) return;
     grupoMesesHistorial.innerHTML = ""; 
 
-    // Extraemos "Año-Mes" únicos de los datos
     const periodos = [...new Set(ingresos.map(i => {
       return i.fecha ? i.fecha.substring(0, 7) : null;
     }))].filter(Boolean).sort().reverse();
@@ -63,7 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     let datosFiltrados = ingresos;
 
-    // Lógica de Filtrado "Dentro del Entorno"
+    // Filtrado por mes
     if (filtro === "actual") {
       const hoy = new Date();
       const mesActual = (hoy.getMonth() + 1).toString().padStart(2, '0');
@@ -74,7 +73,6 @@ document.addEventListener('DOMContentLoaded', () => {
       datosFiltrados = ingresos.filter(i => i.fecha && i.fecha.startsWith(filtro));
     }
 
-    // Mostrar u ocultar mensaje de vacío
     if (datosFiltrados.length === 0) {
       mensajeVacio.classList.remove('hidden');
     } else {
@@ -95,7 +93,6 @@ document.addEventListener('DOMContentLoaded', () => {
           </td>
         `;
         
-        // Evento Eliminar
         fila.querySelector('.eliminar').addEventListener('click', async () => {
           if(confirm(`¿Eliminar registro de ${nombreMostrar}?`)) {
             await fetch(`/api/ingresos/${i.id}`, { method: 'DELETE' });
@@ -103,7 +100,6 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         });
 
-        // Evento Editar
         fila.querySelector('.btn-editar').addEventListener('click', () => {
           prepararEdicion(i);
         });
@@ -113,12 +109,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Escuchar cuando el usuario cambia el mes en el selector
+  // Evento para cuando el usuario cambia de mes
   filtroMesDinamico.addEventListener('change', renderizarTabla);
 
   function prepararEdicion(ingreso) {
     formTitulo.textContent = "Editando alumno";
-    btnSubmit.textContent = "Confirmar Cambios";
+    btnSubmit.textContent = "Confirmar";
     btnCancelar.classList.remove('hidden');
     formSection.classList.add('modo-edicion');
 
@@ -143,7 +139,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   btnCancelar.addEventListener('click', cancelarEdicion);
 
-  // 2. Guardar o Actualizar
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const idParaEditar = editIdInput.value;
@@ -157,41 +152,36 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       let url = '/api/ingresos';
       let metodo = 'POST';
-
       if (idParaEditar) {
         url = `/api/ingresos/${idParaEditar}`;
         metodo = 'PUT';
       }
-
       const res = await fetch(url, {
         method: metodo,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(datos)
       });
-
       if (res.ok) {
-        alert(idParaEditar ? '¡Cambios guardados!' : '¡Ingreso guardado!');
         cancelarEdicion();
         await cargarIngresos();
         mostrar(listaSection);
       }
     } catch (error) {
-      alert("Error al procesar: " + error.message);
+      alert("Error: " + error.message);
     }
   });
 
-  // Navegación
   btnIngresar.addEventListener('click', () => {
     cancelarEdicion();
     mostrar(formSection);
   });
   
   btnVerLista.addEventListener('click', () => {
-    filtroMesDinamico.value = "actual"; // Resetear al mes actual al entrar
+    filtroMesDinamico.value = "actual"; 
     mostrar(listaSection);
     cargarIngresos();
   });
 
-  // Gatillo inicial
+  // Carga inicial
   cargarIngresos();
 });
