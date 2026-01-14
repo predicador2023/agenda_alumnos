@@ -1,23 +1,30 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Agenda de Ingresos</title>
+    <title>Sistema de Ingresos — Gestión de Alumnos</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <header>
-        <div class="header-content">
-            <h1>Agenda de Ingresos</h1>
-        </div>
+
+    <header class="main-header">
+        <h1>Agenda de Ingresos</h1>
     </header>
 
     <main class="container">
+        
         <section id="menu-principal">
             <div class="botones-principales">
-                <button id="btn-ingresar" class="btn-blanco-xl">Ingresar alumno</button>
-                <button id="btn-ver-lista" class="btn-blanco-xl">Ver lista de ingresos</button>
+                <button id="btn-ingresar" class="btn-blanco-xl">
+                    <strong>Ingresar alumno</strong>
+                    <span>Nuevo registro de pago</span>
+                </button>
+                <button id="btn-ver-lista" class="btn-blanco-xl">
+                    <strong>Ver lista completa</strong>
+                    <span>Historial de cobranzas</span>
+                </button>
             </div>
 
             <div class="card-resumen">
@@ -25,9 +32,8 @@
                 
                 <div id="visor-total-rapido" class="hidden">
                     <div class="visor-verde-box">
-                        <span class="visor-label">Total Mes Actual</span>
+                        <small>TOTAL MES ACTUAL</small>
                         <h2 id="monto-total-dinamico">$ 0,00</h2>
-                        <span class="visor-subtext">Basado en registros actuales</span>
                     </div>
                 </div>
 
@@ -39,63 +45,74 @@
         </section>
 
         <section id="form-section" class="hidden">
-            <div class="form-header">
-                <h2 id="form-titulo">Nuevo Registro</h2>
-                <button class="btn-cerrar" onclick="cancelarEdicion()">×</button>
+            <div class="form-card">
+                <h2 id="form-titulo">Nuevo Ingreso</h2>
+                <form id="form-alumno">
+                    <input type="hidden" id="edit-id">
+                    
+                    <div class="campo">
+                        <label>Nombre y Apellido</label>
+                        <input type="text" id="nombre" placeholder="Ej: Juan Pérez" required>
+                    </div>
+
+                    <div class="fila-doble">
+                        <div class="campo">
+                            <label>Tipo</label>
+                            <select id="tipo">
+                                <option value="Mensual">Mensual</option>
+                                <option value="Diario">Diario</option>
+                                <option value="Inscripción">Inscripción</option>
+                            </select>
+                        </div>
+                        <div class="campo">
+                            <label>Monto ($)</label>
+                            <input type="number" id="monto" placeholder="0" required>
+                        </div>
+                    </div>
+
+                    <div class="campo">
+                        <label>Fecha del pago</label>
+                        <input type="date" id="fecha">
+                    </div>
+
+                    <div class="acciones-form">
+                        <button type="submit" class="btn-guardar">Guardar Registro</button>
+                        <button type="button" class="btn-cancelar" onclick="cancelarEdicion()">Cancelar</button>
+                    </div>
+                </form>
             </div>
-            <form id="form-alumno">
-                <input type="hidden" id="edit-id">
-                <div class="campo">
-                    <label>Nombre Completo:</label>
-                    <input type="text" id="nombre" placeholder="Nombre del alumno" required>
-                </div>
-                <div class="fila-doble">
-                    <div class="campo">
-                        <label>Tipo:</label>
-                        <select id="tipo">
-                            <option value="Mensual">Mensual</option>
-                            <option value="Diario">Diario</option>
-                        </select>
-                    </div>
-                    <div class="campo">
-                        <label>Monto ($):</label>
-                        <input type="number" id="monto" placeholder="0" required>
-                    </div>
-                </div>
-                <div class="campo">
-                    <label>Fecha:</label>
-                    <input type="date" id="fecha">
-                </div>
-                <div class="acciones-form">
-                    <button type="submit" class="btn-guardar">Guardar</button>
-                </div>
-            </form>
         </section>
 
         <section id="lista-section" class="hidden">
             <div class="lista-header">
-                <h2>Historial</h2>
+                <h2>Listado</h2>
                 <select id="filtro-mes-dinamico">
-                    <option value="todos">Todos</option>
+                    <option value="todos">Todos los meses</option>
                     <option value="actual">Mes Actual</option>
                     <optgroup label="Historial" id="grupo-meses-historial"></optgroup>
                 </select>
             </div>
-            <div class="table-scroll">
+
+            <div class="table-container">
                 <table>
                     <thead>
                         <tr>
                             <th>Alumno</th>
                             <th>Monto</th>
-                            <th>Acciones</th>
+                            <th>Acc.</th>
                         </tr>
                     </thead>
                     <tbody id="tabla-ingresos"></tbody>
                 </table>
+                <div id="mensaje-vacio" class="hidden">No hay registros para mostrar</div>
             </div>
-            <div id="mensaje-vacio" class="hidden">No hay registros</div>
-            <button onclick="location.reload()" class="btn-volver">Volver al inicio</button>
+
+            <div class="footer-lista">
+                <p id="resultado-resumen">Total: $0,00</p>
+                <button class="btn-volver" onclick="location.reload()">🔙 Volver</button>
+            </div>
         </section>
+
     </main>
 
     <script src="app.js"></script>

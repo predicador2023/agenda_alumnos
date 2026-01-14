@@ -1,87 +1,77 @@
 /* =========================================================
-   AGENDA DE INGRESOS - MASTER STYLE SHEET (VERSION 600+)
-   OPTIMIZACIÓN CRÍTICA PARA PANTALLAS DE 330PX
+   BLOQUE 1: VARIABLES, TIPOGRAFÍA Y MENÚ DE INICIO
    ========================================================= */
 
-/* --- 1. CONFIGURACIÓN DE VARIABLES (1-80) --- */
 :root {
+    /* Colores base para armonía visual */
     --primary: #2f8fdb;
     --primary-dark: #1a5ea1;
-    --primary-soft: rgba(47, 143, 219, 0.1);
     --success: #2ecc71;
-    --success-dark: #27ae60;
     --success-bg: #f0fff4;
-    --danger: #e74c3c;
-    --danger-bg: #fff5f5;
-    --warning: #f1c40f;
-    --bg-body: #f8f9fa;
+    --bg-body: #f4f7f9;
     --bg-card: #ffffff;
-    --text-main: #2d3436;
+    --text-dark: #2c3e50;
     --text-muted: #636e72;
-    --text-light: #95a5a6;
-    --border-color: #dcdfe3;
-    --border-focus: #2f8fdb;
-    --shadow-sm: 0 2px 5px rgba(0,0,0,0.05);
-    --shadow-md: 0 8px 15px rgba(0,0,0,0.08);
-    --radius-xl: 20px;
+    --border-color: #e0e6ed;
+    
+    /* Bordes y Sombras para evitar el aspecto "plano" */
     --radius-lg: 16px;
     --radius-md: 10px;
-    --radius-sm: 6px;
-    --font-main: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    --transition-fast: 0.2s ease;
-    --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --shadow-soft: 0 4px 15px rgba(0,0,0,0.06);
+    --shadow-strong: 0 8px 25px rgba(0,0,0,0.1);
 }
 
-/* --- 2. RESET Y BASES DE DISEÑO (81-160) --- */
+/* 1. RESET Y BASE (Líneas 25-60) */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    -webkit-tap-highlight-color: transparent;
-    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent; /* Evita el cuadro azul al tocar en celular */
 }
 
 body {
-    font-family: var(--font-main);
+    /* La tipografía es clave para que armonice */
+    font-family: 'Segoe UI', Roboto, -apple-system, sans-serif;
     background-color: var(--bg-body);
-    color: var(--text-main);
-    line-height: 1.5;
-    min-height: 100vh;
+    color: var(--text-dark);
+    line-height: 1.6;
+    overflow-x: hidden; /* Evita desplazamientos laterales raros */
 }
 
 .container {
     width: 100%;
-    max-width: 500px;
+    max-width: 480px;
     margin: 0 auto;
-    padding: 20px 15px;
+    padding: 15px;
 }
 
 .hidden { display: none !important; }
 
-/* --- 3. HEADER Y TIPOGRAFÍA (161-220) --- */
-header {
+/* 2. HEADER: EL TÍTULO DE LA APP (Líneas 61-95) */
+.main-header {
     background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-    padding: 40px 20px;
+    padding: 35px 20px;
     text-align: center;
-    color: #ffffff;
+    color: white;
     border-bottom-left-radius: 30px;
     border-bottom-right-radius: 30px;
-    box-shadow: var(--shadow-md);
+    box-shadow: var(--shadow-strong);
     margin-bottom: 25px;
 }
 
-header h1 {
-    font-size: 26px;
+.main-header h1 {
+    font-size: 24px;
     font-weight: 800;
     letter-spacing: -0.5px;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-/* --- 4. BOTONES DEL MENÚ PRINCIPAL (221-300) --- */
+/* 3. BOTONES XL DEL INICIO (Líneas 96-150) */
+/* Esto arregla que no se vean "pegados" y tengan estilo blanco limpio */
 .botones-principales {
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 15px; /* Espacio entre los botones grandes */
     margin-bottom: 25px;
 }
 
@@ -90,77 +80,86 @@ header h1 {
     background: var(--bg-card);
     border: 1px solid var(--border-color);
     padding: 22px 20px;
-    border-radius: var(--radius-lg);
-    font-size: 16px;
-    font-weight: 700;
-    color: var(--text-main);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+    border-radius: var(--radius-md);
+    text-align: left;
     cursor: pointer;
-    transition: var(--transition-normal);
-    box-shadow: var(--shadow-sm);
+    box-shadow: var(--shadow-soft);
+    transition: transform 0.2s ease, background 0.3s ease;
+    display: flex;
+    flex-direction: column;
 }
 
-.btn-blanco-xl::after {
-    content: '→';
-    opacity: 0.3;
-    font-size: 20px;
+.btn-blanco-xl strong {
+    font-size: 16px;
+    color: #111;
+    margin-bottom: 4px;
+}
+
+.btn-blanco-xl span {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: normal;
 }
 
 .btn-blanco-xl:active {
-    transform: scale(0.96);
-    background-color: #f9f9f9;
-    border-color: var(--primary);
+    transform: scale(0.97); /* Efecto de hundido al tocar */
+    background-color: #f1f4f7;
 }
 
-/* --- 5. TARJETA DE RESUMEN Y VISOR (301-420) --- */
+/* 4. TARJETA DE RESUMEN (Líneas 151-200) */
 .card-resumen {
     background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-xl);
-    padding: 25px 20px;
-    box-shadow: var(--shadow-md);
+    padding: 22px;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-soft);
+    border: 1px solid rgba(0,0,0,0.03);
 }
 
 .card-resumen h2 {
-    font-size: 14px;
-    font-weight: 800;
-    color: var(--text-muted);
+    font-size: 13px;
     text-transform: uppercase;
+    color: var(--text-muted);
     text-align: center;
-    margin-bottom: 20px;
+    margin-bottom: 18px;
     letter-spacing: 1.2px;
+    font-weight: 700;
 }
-
+/* CONTINUACIÓN: VISOR VERDE Y BOTONES DE SUMATORIA */
 .visor-verde-box {
     background: var(--success-bg);
     border: 2px dashed var(--success);
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-md);
     padding: 20px;
-    margin-bottom: 20px;
     text-align: center;
-    animation: slideDown 0.4s ease-out;
+    margin-bottom: 20px;
+    animation: fadeIn 0.4s ease-out;
+    position: relative;
+    overflow: hidden;
 }
 
-.visor-label {
+.visor-verde-box::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 4px; height: 100%;
+    background: var(--success);
+}
+
+.visor-verde-box small {
     display: block;
-    font-size: 11px;
     color: var(--success-dark);
     font-weight: 800;
-    margin-bottom: 8px;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 5px;
 }
 
 #monto-total-dinamico {
-    font-size: 36px;
+    font-size: 34px;
     color: #1a7f3b;
     font-weight: 900;
     margin: 5px 0;
-}
-
-.visor-subtext {
-    font-size: 10px;
-    color: var(--text-light);
 }
 
 .grid-botones-resumen {
@@ -170,129 +169,339 @@ header h1 {
 }
 
 .btn-sub-resumen {
-    padding: 14px 8px;
+    padding: 14px 5px;
     background: #f8f9fa;
     border: 1px solid #dee2e6;
-    border-radius: var(--radius-md);
+    border-radius: 8px;
     font-size: 11px;
     font-weight: 700;
     color: #495057;
     cursor: pointer;
-    transition: var(--transition-fast);
+    transition: var(--transition);
 }
 
 .btn-sub-resumen:active {
     background: #e9ecef;
+    border-color: #ced4da;
 }
 
-/* --- 6. TABLAS Y LISTADOS (421-520) --- */
-.table-scroll {
+/* --- BLOQUE: EL FORMULARIO "CON AIRE" (ARREGLO DE AMONTONAMIENTO) --- */
+.form-card {
+    background: var(--bg-card);
+    padding: 25px;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-strong);
+    border: 1px solid rgba(0,0,0,0.05);
+}
+
+#form-titulo {
+    font-size: 22px;
+    color: var(--text-dark);
+    font-weight: 800;
+    margin-bottom: 25px;
+    border-left: 5px solid var(--primary);
+    padding-left: 15px;
+}
+
+/* ESTA ES LA CLAVE: El espacio entre campos */
+.campo {
+    margin-bottom: 22px; 
+    display: flex;
+    flex-direction: column;
+}
+
+.campo label {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    padding-left: 2px;
+}
+
+input, select {
+    width: 100%;
+    padding: 14px 16px;
+    border: 1.5px solid var(--border-color);
+    border-radius: 12px;
+    font-size: 16px;
+    background-color: #fdfdfd;
+    transition: all 0.2s ease;
+    color: #333;
+}
+
+input:focus, select:focus {
+    outline: none;
+    border-color: var(--primary);
+    background-color: #ffffff;
+    box-shadow: 0 0 0 4px var(--primary-soft);
+}
+
+.fila-doble {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.btn-guardar {
+    width: 100%;
+    padding: 18px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 14px;
+    font-weight: 700;
+    font-size: 16px;
+    box-shadow: 0 6px 15px rgba(47, 143, 219, 0.3);
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+/* --- 5. ESTILOS DE LA TABLA (HISTORIAL) --- */
+.table-container {
     width: 100%;
     background: white;
     border-radius: var(--radius-md);
-    overflow: hidden;
+    overflow: hidden; /* Importante para que no se escapen las esquinas */
+    box-shadow: var(--shadow-soft);
+    margin-top: 15px;
 }
 
 table {
     width: 100%;
     border-collapse: collapse;
+    font-size: 14px;
+}
+
+thead {
+    background-color: #f8f9fa;
 }
 
 th {
-    background: #f1f3f5;
-    font-size: 11px;
+    padding: 15px 10px;
+    text-align: left;
+    font-weight: 700;
     color: var(--text-muted);
-    padding: 12px 5px;
+    border-bottom: 2px solid #eee;
     text-transform: uppercase;
-    border-bottom: 2px solid var(--border-color);
+    font-size: 11px;
 }
 
 td {
-    padding: 15px 5px;
-    font-size: 13px;
-    text-align: center;
-    border-bottom: 1px solid #f8f9fa;
+    padding: 15px 10px;
+    border-bottom: 1px solid #f1f1f1;
+    color: #444;
 }
 
-.monto-positivo {
-    color: var(--success-dark);
-    font-weight: 800;
+tr:last-child td {
+    border-bottom: none;
 }
 
-/* --- 7. MEDIA QUERIES (330PX) INTEGRADOS (521-600) --- */
+/* Estilo para los nombres en la tabla */
+td strong {
+    color: #111;
+    display: block;
+}
+
+/* Botones de acción en la tabla */
+.btn-editar {
+    background: none;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.btn-editar:active {
+    transform: scale(1.2);
+}
+
+/* --- 6. EL MEDIA QUERY CRÍTICO (330PX) --- */
+/* Esto es lo que más te interesaba para que no se rompa nada */
 @media screen and (max-width: 330px) {
     .container {
-        padding: 10px;
+        padding: 8px; /* Menos margen lateral para ganar espacio */
     }
 
-    header {
+    .main-header {
         padding: 20px 10px;
-        margin-bottom: 15px;
     }
 
-    header h1 {
-        font-size: 20px;
+    .main-header h1 {
+        font-size: 19px; /* Título más chico para una sola línea */
     }
 
     .btn-blanco-xl {
         padding: 15px;
+    }
+
+    .btn-blanco-xl strong {
         font-size: 14px;
-    }
-
-    .card-resumen {
-        padding: 15px 10px;
-    }
-
-    .card-resumen h2 {
-        font-size: 12px;
-        margin-bottom: 12px;
     }
 
     #monto-total-dinamico {
-        font-size: 26px;
+        font-size: 26px; /* Evita que el precio se corte */
     }
+
+    /* Ajuste de la tabla para pantalla minúscula */
+    th, td {
+        padding: 10px 4px;
+        font-size: 11px;
+    }
+
+    /* Forzamos anchos de columna para que el nombre tenga prioridad */
+    th:nth-child(1), td:nth-child(1) { width: 50%; } /* Alumno */
+    th:nth-child(2), td:nth-child(2) { width: 30%; } /* Monto */
+    th:nth-child(3), td:nth-child(3) { width: 20%; } /* Acción */
 
     .btn-sub-resumen {
-        font-size: 9px;
-        padding: 10px 2px;
-        letter-spacing: -0.3px;
-    }
-
-    /* Tabla en 330px */
-    th, td {
         font-size: 10px;
         padding: 10px 2px;
     }
-
-    table {
-        table-layout: fixed;
-    }
-
-    /* Ajuste de columnas para que el nombre no se corte */
-    th:nth-child(1), td:nth-child(1) { width: 45%; }
-    th:nth-child(2), td:nth-child(2) { width: 30%; }
-    th:nth-child(3), td:nth-child(3) { width: 25%; }
-
-    .btn-editar {
-        font-size: 14px;
-    }
 }
 
-/* MODO OSCURO */
+/* --- 7. MODO OSCURO (OPCIONAL PERO PROFESIONAL) --- */
 @media (prefers-color-scheme: dark) {
     :root {
         --bg-body: #0c0d0e;
         --bg-card: #1a1c1e;
-        --text-main: #e9ecef;
-        --border-color: #2d2f31;
+        --text-dark: #e0e0e0;
+        --border-color: #333;
     }
-    .btn-blanco-xl { background: #1a1c1e; color: #fff; }
-    .btn-sub-resumen { background: #25282a; color: #adb5bd; border-color: #343a40; }
-    th { background: #25282a; }
-    td { border-color: #25282a; }
+    
+    .btn-blanco-xl, .card-resumen, .form-card, .table-container {
+        background: #1a1c1e;
+        border-color: #333;
+    }
+
+    input, select {
+        background: #25282a;
+        color: white;
+        border-color: #444;
+    }
+
+    th {
+        background: #25282a;
+        color: #888;
+    }
+
+    td {
+        border-color: #25282a;
+        color: #ccc;
+    }
+}
+/* --- 10. MENSAJES DE ESTADO (VACÍO, ERROR, ÉXITO) --- */
+#mensaje-vacio {
+    padding: 40px 20px;
+    text-align: center;
+    background: #fdfdfd;
+    border: 2px dashed #eee;
+    border-radius: var(--radius-md);
+    margin: 20px 0;
+    color: var(--text-muted);
+    font-style: italic;
+    font-size: 14px;
 }
 
-@keyframes slideDown {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
+.success-toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--success);
+    color: white;
+    padding: 12px 25px;
+    border-radius: 50px;
+    box-shadow: var(--shadow-strong);
+    z-index: 1000;
+    font-weight: 700;
+    animation: slideUp 0.3s ease-out;
 }
+
+/* --- 11. BOTONES DE ACCIÓN EN LISTADO (BORRAR/EDITAR) --- */
+.acciones-celda {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.btn-borrar {
+    background-color: var(--danger-bg, #fff5f5);
+    color: var(--danger);
+    border: 1px solid #feb2b2;
+    padding: 8px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-borrar:hover {
+    background-color: var(--danger);
+    color: white;
+}
+
+/* --- 12. DISEÑO DEL BOTÓN VOLVER (NAV ABAJO) --- */
+.btn-volver {
+    margin-top: 25px;
+    width: 100%;
+    background: transparent;
+    border: 2px solid var(--primary);
+    color: var(--primary);
+    padding: 15px;
+    border-radius: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-volver:active {
+    background: var(--primary);
+    color: white;
+}
+
+/* --- 13. CLASES DE UTILIDAD PARA JS --- */
+.monto-valor {
+    font-weight: 800;
+    color: var(--text-dark);
+}
+
+.monto-simbolo {
+    color: var(--success-dark);
+    margin-right: 2px;
+}
+
+.fecha-registro {
+    font-size: 11px;
+    color: var(--text-muted);
+    display: block;
+}
+
+/* --- 14. ANIMACIONES ADICIONALES --- */
+@keyframes slideUp {
+    from { transform: translate(-50%, 100%); opacity: 0; }
+    to { transform: translate(-50%, 0); opacity: 1; }
+}
+
+@keyframes pulse-soft {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+    100% { transform: scale(1); }
+}
+
+.anim-pulse {
+    animation: pulse-soft 2s infinite ease-in-out;
+}
+
+/* --- 15. FIX FINAL PARA IPHONE Y PANTALLAS EXTRA CHICAS --- */
+@media screen and (max-height: 600px) {
+    .main-header { padding: 15px; }
+    .main-header h1 { font-size: 18px; }
+    .form-card { padding: 15px; }
+}
+
+/* --- FIN DEL ARCHIVO CSS --- */
