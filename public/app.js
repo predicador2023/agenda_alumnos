@@ -8,22 +8,14 @@ const HEADERS = {
     "Prefer": "return=representation"
 };
 
-// --- 2. FUNCIÓN DE NAVEGACIÓN ---
+// --- 2. NAVEGACIÓN ---
 function irA(pantallaId) {
-    // Ocultar todas las secciones
-    document.getElementById('menu-principal').classList.add('hidden');
-    document.getElementById('form-section').classList.add('hidden');
-    document.getElementById('lista-section').classList.add('hidden');
-    
-    // Mostrar la elegida
-    const destino = document.getElementById(pantallaId);
-    if (destino) destino.classList.remove('hidden');
-
-    // Si vamos a la lista, cargamos los datos
+    document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
+    document.getElementById(pantallaId).classList.remove('hidden');
     if (pantallaId === 'lista-section') cargarDesdeSupabase();
 }
 
-// --- 3. TRAER DATOS Y ACTUALIZAR MONTOS ---
+// --- 3. TRAER DATOS (CON NOMBRES Y TIPO CORREGIDOS) ---
 async function cargarDesdeSupabase() {
     const tabla = document.getElementById('tabla-ingresos');
     const visorMontoInicio = document.getElementById('monto-total-dinamico');
@@ -39,67 +31,62 @@ async function cargarDesdeSupabase() {
 
         datos.forEach(i => {
             const montoNum = parseFloat(i.monto) || 0;
-            // Sumar si es Enero 2026
+            // Intentamos sacar el nombre aunque la columna se llame distinto
+            const nombreAlumno = i.nombre || i.alumno || "Sin nombre";
+            const tipoPago = i.tipo || i.tipo_pago || "S/D";
+
             if (i.fecha && i.fecha.includes('2026-01')) {
                 sumaEnero += montoNum;
             }
 
             tabla.innerHTML += `
                 <tr>
-                    <td><strong>${i.nombre}</strong><br><small>${i.fecha} - ${i.tipo}</small></td>
+                    <td>
+                        <strong style="text-transform:uppercase;">${nombreAlumno}</strong><br>
+                        <small>${i.fecha} • <span style="color:#666">${tipoPago}</span></small>
+                    </td>
                     <td style="color:green; font-weight:bold; text-align:right;">
                         $ ${montoNum.toLocaleString('es-AR')}
                     </td>
-                    <td style="text-align:center;">
+                    <td style="text-align:center; min-width:80px;">
+                        <button onclick="editarRegistro('${i.id}')" style="border:none; background:none; font-size:18px; cursor:pointer;">✏️</button>
                         <button onclick="borrarRegistro('${i.id}')" style="border:none; background:none; font-size:18px; cursor:pointer;">🗑️</button>
                     </td>
                 </tr>
             `;
         });
 
-        // Actualizar montos en la interfaz
         const totalFormateado = `$ ${sumaEnero.toLocaleString('es-AR')}`;
         if (visorMontoInicio) visorMontoInicio.innerText = totalFormateado;
         if (resultadoResumenLista) resultadoResumenLista.innerText = `Total: ${totalFormateado}`;
 
     } catch (err) {
-        console.error("Error al conectar con Supabase:", err);
+        console.error("Error en Supabase:", err);
     }
 }
 
-// --- 4. BORRAR REGISTRO ---
+// --- 4. FUNCIONES DE ACCIÓN ---
 window.borrarRegistro = async (id) => {
-    if (!confirm("¿Eliminar este registro de la nube?")) return;
-    try {
-        await fetch(`${SB_URL}/rest/v1/ingresos?id=eq.${id}`, {
-            method: 'DELETE',
-            headers: HEADERS
-        });
-        cargarDesdeSupabase();
-    } catch (err) {
-        alert("No se pudo borrar");
-    }
+    if (!confirm("¿Eliminar este registro?")) return;
+    await fetch(`${SB_URL}/rest/v1/ingresos?id=eq.${id}`, { method: 'DELETE', headers: HEADERS });
+    cargarDesdeSupabase();
 };
 
-// --- 5. INICIALIZACIÓN AL CARGAR LA PÁGINA ---
+window.editarRegistro = (id) => {
+    alert("Función para editar el registro ID: " + id + "\nPróximamente disponible.");
+    // Aquí podríamos abrir el formulario con los datos cargados
+};
+
+// --- 5. INICIALIZACIÓN ---
 document.addEventListener('DOMContentLoaded', () => {
-    
-    // Conectar botones del Menú Principal
     document.getElementById('btn-ingresar').onclick = () => irA('form-section');
     document.getElementById('btn-ver-lista').onclick = () => irA('lista-section');
     
-    // Botón "Ver mes actual" (Muestra el visor verde)
     document.getElementById('btn-mes-actual-inicio').onclick = () => {
         document.getElementById('visor-total-rapido').classList.remove('hidden');
         cargarDesdeSupabase();
     };
 
-    // Botón "Meses anteriores" (Por ahora solo refresca o avisa)
-    document.getElementById('btn-historial-inicio').onclick = () => {
-        alert("Historial completo disponible en 'Ver lista completa'");
-    };
-
-    // Configurar Formulario de Ingreso
     const form = document.getElementById('form-alumno');
     if (form) {
         form.onsubmit = async (e) => {
@@ -111,23 +98,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 tipo: document.getElementById('tipo').value
             };
 
-            try {
-                const res = await fetch(`${SB_URL}/rest/v1/ingresos`, {
-                    method: 'POST',
-                    headers: HEADERS,
-                    body: JSON.stringify(nuevo)
-                });
-                if (res.ok) {
-                    alert("✅ Registro guardado en Supabase");
-                    form.reset();
-                    location.reload(); // Recargamos para ver cambios
-                }
-            } catch (err) {
-                alert("Error al guardar en la nube");
+            const res = await fetch(`${SB_URL}/rest/v1/ingresos`, {
+                method: 'POST',
+                headers: HEADERS,
+                body: JSON.stringify(nuevo)
+            });
+            if (res.ok) {
+                alert("✅ Guardado correctamente");
+                form.reset();
+                location.reload();
             }
         };
     }
-
-    // Carga inicial de datos silenciosa
     cargarDesdeSupabase();
 });
