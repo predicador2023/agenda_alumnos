@@ -17,12 +17,11 @@ function actualizarHistorialDesplegable(datos) {
     const contenedor = document.getElementById('contenedor-historial-desplegable');
     if (!contenedor) return;
 
-    contenedor.innerHTML = ''; // Limpiamos
+    contenedor.innerHTML = ''; 
 
     const ahora = new Date();
     const mesActualRef = `${ahora.getFullYear()}-${String(ahora.getMonth() + 1).padStart(2, '0')}`;
 
-    // Agrupamos meses por año
     const historialAgrupado = {};
     datos.forEach(i => {
         const fechaStr = i.fecha || "";
@@ -38,27 +37,27 @@ function actualizarHistorialDesplegable(datos) {
     const aniosDisponibles = Object.keys(historialAgrupado).sort().reverse();
 
     if (aniosDisponibles.length === 0) {
-        contenedor.innerHTML = '<p style="text-align:center; color:gray;">No hay historial aún.</p>';
+        contenedor.innerHTML = '<p style="text-align:center; color:gray; padding: 20px;">No hay historial aún.</p>';
         return;
     }
 
-    // Construimos los acordeones de años
     aniosDisponibles.forEach(anio => {
         const detalles = document.createElement('details');
         detalles.style.marginBottom = "10px";
         detalles.style.border = "1px solid #ddd";
         detalles.style.borderRadius = "8px";
+        detalles.style.backgroundColor = "#fff";
 
         const sumario = document.createElement('summary');
         sumario.innerHTML = `<b>📅 Año ${anio}</b>`;
-        sumario.style.padding = "10px";
+        sumario.style.padding = "12px";
         sumario.style.cursor = "pointer";
 
         const divMeses = document.createElement('div');
         divMeses.style.display = "grid";
         divMeses.style.gridTemplateColumns = "repeat(3, 1fr)";
-        divMeses.style.gap = "8px";
-        divMeses.style.padding = "10px";
+        divMeses.style.gap = "10px";
+        divMeses.style.padding = "15px";
 
         const meses = Array.from(historialAgrupado[anio]).sort().reverse();
         meses.forEach(mesStr => {
@@ -67,11 +66,14 @@ function actualizarHistorialDesplegable(datos) {
             
             const btn = document.createElement('button');
             btn.innerText = nombres[parseInt(numMes) - 1];
-            btn.style.padding = "8px";
-            btn.style.borderRadius = "5px";
-            btn.style.border = "1px solid #007bff";
+            btn.style.padding = "10px";
+            btn.style.borderRadius = "6px";
+            btn.style.border = "1px solid #28a745";
             btn.style.backgroundColor = "white";
-            btn.style.color = "#007bff";
+            btn.style.color = "#28a745";
+            btn.style.fontWeight = "bold";
+            btn.style.cursor = "pointer";
+            
             btn.onclick = () => {
                 irA('lista-section');
                 cargarDesdeSupabase(mesStr);
@@ -94,17 +96,17 @@ function irA(pantallaId) {
 }
 
 /**
- * 3. CARGA DE DATOS
+ * 3. CARGA DE DATOS: Centralizada y Filtrada
  */
 async function cargarDesdeSupabase(filtro = 'todos') {
     const tabla = document.getElementById('tabla-ingresos');
     const visorMontoInicio = document.getElementById('monto-total-dinamico');
+    const contenedorVisor = document.getElementById('visor-total-rapido');
     
     try {
         const res = await fetch(`${SB_URL}/rest/v1/ingresos?select=*&order=fecha.desc`, { headers: HEADERS });
         const datos = await res.json();
         
-        // Actualizamos el historial cada vez que cargamos datos
         actualizarHistorialDesplegable(datos);
 
         if (!tabla) return;
@@ -112,19 +114,25 @@ async function cargarDesdeSupabase(filtro = 'todos') {
         
         const ahora = new Date();
         const mesActualRef = `${ahora.getFullYear()}-${String(ahora.getMonth() + 1).padStart(2, '0')}`;
-        let sumaEnero = 0;
+        
+        // Calculamos el total del MES ACTUAL para el visor
+        const soloMesActual = datos.filter(i => i.fecha && i.fecha.includes(mesActualRef));
+        const sumaMesActual = soloMesActual.reduce((acc, curr) => acc + (parseFloat(curr.monto) || 0), 0);
 
+        if (visorMontoInicio) {
+            visorMontoInicio.innerText = `$ ${sumaMesActual.toLocaleString('es-AR')}`;
+        }
+
+        // Lógica de filtrado para la tabla
         datos.forEach(i => {
             const mesRegistro = i.fecha ? i.fecha.slice(0, 7) : "";
             const esMesActual = (mesRegistro === mesActualRef);
             
-            // Filtros
             if (filtro === 'actual' && !esMesActual) return;
             if (filtro === 'anteriores' && esMesActual) return;
             if (filtro !== 'todos' && filtro !== 'actual' && filtro !== 'anteriores' && filtro !== mesRegistro) return;
 
             const montoNum = parseFloat(i.monto) || 0;
-            if (esMesActual) sumaEnero += montoNum;
 
             tabla.innerHTML += `
                 <tr>
@@ -135,22 +143,17 @@ async function cargarDesdeSupabase(filtro = 'todos') {
                     <td class="monto-positivo">$${montoNum.toLocaleString('es-AR')}</td>
                     <td>
                         <div style="display:flex; gap:12px; justify-content:flex-end;">
-                            <span onclick="prepararEdicion('${i.id}','${i.nombre_alumno}','${i.monto}','${i.fecha}','${i.tipo}')" style="cursor:pointer;">✏️</span>
-                            <span onclick="borrarRegistro('${i.id}')" style="cursor:pointer;">🗑️</span>
+                            <span onclick="prepararEdicion('${i.id}','${i.nombre_alumno}','${i.monto}','${i.fecha}','${i.tipo}')" style="cursor:pointer; font-size:18px;">✏️</span>
+                            <span onclick="borrarRegistro('${i.id}')" style="cursor:pointer; font-size:18px;">🗑️</span>
                         </div>
                     </td>
                 </tr>
             `;
         });
-
-        if (visorMontoInicio) {
-            visorMontoInicio.innerText = `$ ${sumaEnero.toLocaleString('es-AR')}`;
-        }
         
-    } catch (err) { console.error("Error:", err); }
+    } catch (err) { console.error("Error en la carga:", err); }
 }
 
-// ... (El resto de funciones como borrar y prepararEdicion siguen igual)
 window.prepararEdicion = (id, nombre, monto, fecha, tipo) => {
     editandoID = id;
     document.getElementById('nombre').value = nombre;
@@ -158,33 +161,40 @@ window.prepararEdicion = (id, nombre, monto, fecha, tipo) => {
     document.getElementById('fecha').value = fecha;
     document.getElementById('tipo').value = tipo || 'Diario';
     irA('form-section');
+    document.querySelector('.btn-guardar').innerText = "Actualizar Registro";
 };
 
 window.borrarRegistro = async (id) => {
-    if (!confirm("¿Eliminar este pago?")) return;
+    if (!confirm("¿Eliminar este pago definitivamente?")) return;
     await fetch(`${SB_URL}/rest/v1/ingresos?id=eq.${id}`, { method: 'DELETE', headers: HEADERS });
     cargarDesdeSupabase();
 };
 
 document.addEventListener('DOMContentLoaded', () => {
+    
     document.getElementById('btn-ingresar').onclick = () => {
         editandoID = null;
         document.getElementById('form-alumno').reset();
+        document.querySelector('.btn-guardar').innerText = "Guardar Registro";
         irA('form-section');
     };
     
     document.getElementById('btn-ver-lista').onclick = () => {
+        // En lista completa, ocultamos el visor de "Total mes actual" para no confundir
+        document.getElementById('visor-total-rapido').classList.add('hidden');
         irA('lista-section');
         cargarDesdeSupabase('todos');
     };
     
     document.getElementById('btn-mes-actual-inicio').onclick = () => {
+        // Al ver mes actual, aseguramos que el visor sea visible
+        document.getElementById('visor-total-rapido').classList.remove('hidden');
         irA('lista-section');
         cargarDesdeSupabase('actual');
     };
 
     document.getElementById('btn-historial-inicio').onclick = () => {
-        irA('historial-section'); // <--- IMPORTANTE: Nueva pantalla de historial
+        irA('historial-section'); 
         cargarDesdeSupabase('anteriores');
     };
 
@@ -204,10 +214,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const res = await fetch(url, { method: metodo, headers: HEADERS, body: JSON.stringify(datos) });
         if (res.ok) {
-            alert("Operación exitosa");
+            alert(editandoID ? "✅ Registro actualizado" : "✅ Registro guardado");
             location.reload(); 
         }
     };
 
+    // Carga inicial para el visor de la pantalla principal
     cargarDesdeSupabase();
 });
