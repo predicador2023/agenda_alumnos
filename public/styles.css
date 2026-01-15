@@ -574,3 +574,69 @@ optgroup {
     70% { box-shadow: 0 0 0 10px rgba(46, 204, 113, 0); }
     100% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0); }
 }
+
+
+/* =================================AQUÍ EMPIEZA LO NUEVO================================= */
+
+/* 1. Animación suave para el monto total */
+@keyframes aparecerMonto {
+    from { 
+        opacity: 0; 
+        transform: translateY(15px); 
+    }
+    to { 
+        opacity: 1; 
+        transform: translateY(0); 
+    }
+}
+
+.animar-entrada {
+    display: inline-block;
+    animation: aparecerMonto 0.6s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+}
+
+/* 2. Estilo de la tabla para que no se desordene en el celular */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed; /* Esto es lo que evita que las columnas "bailen" */
+    margin-top: 10px;
+}
+
+td {
+    padding: 12px 5px;
+    border-bottom: 1px solid #edf2f7;
+    vertical-align: middle;
+    overflow: hidden;
+}
+
+/* Ancho de columnas: Alumno (55%), Monto (30%), Botones (15%) */
+td:nth-child(1) { width: 55%; }
+td:nth-child(2) { width: 30%; text-align: right; }
+td:nth-child(3) { width: 15%; text-align: right; }
+
+/* Estilo de texto dentro de la tabla */
+.nombre-tabla {
+    font-weight: 800;
+    font-size: 14px;
+    text-transform: uppercase;
+    color: #2d3748;
+    display: block;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
+.info-sub-tabla {
+    font-size: 11px;
+    color: #718096;
+    display: block;
+}
+
+/* Color verde para los montos */
+.monto-positivo {
+    font-weight: bold;
+    color: #1a7f3b;
+    font-size: 15px;
+}
+/* =================================AQUÍ TERMINA LO NUEVO================================= */
