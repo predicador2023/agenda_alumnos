@@ -10,58 +10,129 @@ const HEADERS = {
 
 let editandoID = null;
 
+function irA(pantallaId) {
+    document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
+    document.getElementById(pantallaId).classList.remove('hidden');
+}
+
 /**
- * 1. HISTORIAL DINÁMICO
+ * CARGA DE DATOS: Lógica separada para monto y lista
  */
+async function cargarDatos(modo = 'todos') {
+    const tabla = document.getElementById('tabla-ingresos');
+    const visorMontoTexto = document.getElementById('monto-total-dinamico');
+    const visorContenedor = document.getElementById('visor-total-rapido');
+    
+    try {
+        const res = await fetch(`${SB_URL}/rest/v1/ingresos?select=*&order=fecha.desc`, { headers: HEADERS });
+        const datos = await res.json();
+        
+        actualizarHistorialDinamico(datos);
+
+        const ahora = new Date();
+        const mesActualRef = `${ahora.getFullYear()}-${String(ahora.getMonth() + 1).padStart(2, '0')}`;
+        
+        // 1. CÁLCULO DEL MONTO (Mes actual siempre)
+        const soloMesActual = datos.filter(i => i.fecha && i.fecha.includes(mesActualRef));
+        const sumaMesActual = soloMesActual.reduce((acc, curr) => acc + (parseFloat(curr.monto) || 0), 0);
+        
+        if (visorMontoTexto) {
+            visorMontoTexto.innerText = `$ ${sumaMesActual.toLocaleString('es-AR')}`;
+        }
+
+        // 2. LÓGICA DE PANTALLAS
+        if (modo === 'monto-solo') {
+            // SOLO EL MONTO: Mostramos visor, ocultamos sección de lista
+            if (visorContenedor) {
+                visorContenedor.classList.remove('hidden');
+                // Lo movemos fuera de la sección de lista si es necesario para que se vea solo
+                document.body.insertBefore(visorContenedor, document.getElementById('historial-section'));
+            }
+            document.getElementById('lista-section').classList.add('hidden');
+        } 
+        else if (modo === 'lista-completa') {
+            // SOLO LA LISTA: Ocultamos visor, llenamos tabla
+            if (visorContenedor) visorContenedor.classList.add('hidden');
+            if (tabla) {
+                tabla.innerHTML = '';
+                datos.forEach(i => renderizarFila(i, tabla));
+            }
+        }
+        else if (modo === 'historial-mes') {
+            // LISTA FILTRADA POR HISTORIAL: Ocultamos visor, filtramos datos
+            if (visorContenedor) visorContenedor.classList.add('hidden');
+            if (tabla) {
+                tabla.innerHTML = '';
+                // Aquí 'filtroHistorial' sería el mes seleccionado
+                const filtrados = datos.filter(i => i.fecha && i.fecha.includes(window.mesSeleccionado));
+                filtrados.forEach(i => renderizarFila(i, tabla));
+            }
+        }
+        
+    } catch (err) { console.error("Error:", err); }
+}
+
+function renderizarFila(i, tabla) {
+    const montoNum = parseFloat(i.monto) || 0;
+    tabla.innerHTML += `
+        <tr>
+            <td>
+                <span class="nombre-tabla">${i.nombre_alumno || 'Sin Nombre'}</span>
+                <span class="info-sub-tabla">${i.fecha} • <b>${i.tipo}</b></span>
+            </td>
+            <td class="monto-positivo">$${montoNum.toLocaleString('es-AR')}</td>
+            <td>
+                <div style="display:flex; gap:12px; justify-content:flex-end;">
+                    <span onclick="prepararEdicion('${i.id}','${i.nombre_alumno}','${i.monto}','${i.fecha}','${i.tipo}')" style="cursor:pointer;">✏️</span>
+                    <span onclick="borrarRegistro('${i.id}')" style="cursor:pointer;">🗑️</span>
+                </div>
+            </td>
+        </tr>
+    `;
+}
+
 function actualizarHistorialDinamico(datos) {
     const contenedor = document.getElementById('contenedor-historial-desplegable');
     if (!contenedor) return;
-    contenedor.innerHTML = ''; 
-
+    contenedor.innerHTML = '';
     const ahora = new Date();
     const mesActualRef = `${ahora.getFullYear()}-${String(ahora.getMonth() + 1).padStart(2, '0')}`;
-
     const historialAgrupado = {};
+    
     datos.forEach(i => {
-        const fechaStr = i.fecha || "";
-        const mesAnio = fechaStr.slice(0, 7); 
-        const anio = fechaStr.slice(0, 4);
+        const mesAnio = i.fecha ? i.fecha.slice(0, 7) : "";
+        const anio = i.fecha ? i.fecha.slice(0, 4) : "";
         if (mesAnio !== "" && mesAnio < mesActualRef) {
             if (!historialAgrupado[anio]) historialAgrupado[anio] = new Set();
             historialAgrupado[anio].add(mesAnio);
         }
     });
 
-    const anios = Object.keys(historialAgrupado).sort().reverse();
-    anios.forEach(anio => {
+    Object.keys(historialAgrupado).sort().reverse().forEach(anio => {
         const detalles = document.createElement('details');
         detalles.style.marginBottom = "10px";
         detalles.style.border = "1px solid #ddd";
         detalles.style.borderRadius = "8px";
-        detalles.style.backgroundColor = "#fff";
-
+        detalles.style.backgroundColor = "white";
         const sumario = document.createElement('summary');
         sumario.innerHTML = `<b>📅 Año ${anio}</b>`;
         sumario.style.padding = "10px";
-        sumario.style.cursor = "pointer";
-
         const divMeses = document.createElement('div');
         divMeses.style.display = "grid";
         divMeses.style.gridTemplateColumns = "repeat(3, 1fr)";
         divMeses.style.gap = "8px";
         divMeses.style.padding = "10px";
-
-        const meses = Array.from(historialAgrupado[anio]).sort().reverse();
-        meses.forEach(mesStr => {
-            const [_, numMes] = mesStr.split('-');
+        
+        Array.from(historialAgrupado[anio]).sort().reverse().forEach(mesStr => {
+            const numMes = mesStr.split('-')[1];
             const nombres = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
             const btn = document.createElement('button');
             btn.innerText = nombres[parseInt(numMes) - 1];
-            btn.className = "btn-sub-resumen"; 
-            btn.onclick = () => {
-                document.getElementById('visor-total-rapido').classList.add('hidden');
-                irA('lista-section');
-                cargarDesdeSupabase(mesStr);
+            btn.className = "btn-sub-resumen";
+            btn.onclick = () => { 
+                window.mesSeleccionado = mesStr;
+                irA('lista-section'); 
+                cargarDatos('historial-mes'); 
             };
             divMeses.appendChild(btn);
         });
@@ -71,91 +142,22 @@ function actualizarHistorialDinamico(datos) {
     });
 }
 
-/**
- * 2. NAVEGACIÓN
- */
-function irA(pantallaId) {
-    document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
-    document.getElementById(pantallaId).classList.remove('hidden');
-}
-
-/**
- * 3. CARGA DE DATOS (FILTRADO MEJORADO)
- */
-async function cargarDesdeSupabase(filtro = 'todos') {
-    const tabla = document.getElementById('tabla-ingresos');
-    const visorMontoTexto = document.getElementById('monto-total-dinamico');
-    
-    try {
-        const res = await fetch(`${SB_URL}/rest/v1/ingresos?select=*&order=fecha.desc`, { headers: HEADERS });
-        const datos = await res.json();
-        
-        actualizarHistorialDinamico(datos);
-        if (!tabla) return;
-        tabla.innerHTML = ''; 
-        
-        const ahora = new Date();
-        const mesActualRef = `${ahora.getFullYear()}-${String(ahora.getMonth() + 1).padStart(2, '0')}`;
-        let sumaTotal = 0;
-
-        datos.forEach(i => {
-            const mesRegistro = i.fecha ? i.fecha.slice(0, 7) : "";
-            
-            // FILTRADO ESTRICTO
-            if (filtro === 'actual' && mesRegistro !== mesActualRef) return;
-            if (filtro !== 'todos' && filtro !== 'actual' && mesRegistro !== filtro) return;
-
-            const montoNum = parseFloat(i.monto) || 0;
-            sumaTotal += montoNum;
-
-            tabla.innerHTML += `
-                <tr>
-                    <td>
-                        <span class="nombre-tabla">${i.nombre_alumno || 'Sin Nombre'}</span>
-                        <span class="info-sub-tabla">${i.fecha} • <b>${i.tipo}</b></span>
-                    </td>
-                    <td class="monto-positivo">$${montoNum.toLocaleString('es-AR')}</td>
-                    <td>
-                        <div style="display:flex; gap:12px; justify-content:flex-end;">
-                            <span onclick="prepararEdicion('${i.id}','${i.nombre_alumno}','${i.monto}','${i.fecha}','${i.tipo}')" style="cursor:pointer;">✏️</span>
-                            <span onclick="borrarRegistro('${i.id}')" style="cursor:pointer;">🗑️</span>
-                        </div>
-                    </td>
-                </tr>
-            `;
-        });
-
-        if (visorMontoTexto) {
-            visorMontoTexto.innerText = `$ ${sumaTotal.toLocaleString('es-AR')}`;
-        }
-        
-    } catch (err) { console.error("Error:", err); }
-}
-
 document.addEventListener('DOMContentLoaded', () => {
-    // BOTÓN VER MES ACTUAL (CORREGIDO)
+    // BOTÓN: VER MES ACTUAL (SOLO EL MONTO)
     document.getElementById('btn-mes-actual-inicio').onclick = () => {
-        // 1. Movemos el visor DENTRO de la pantalla de lista (opcional pero ayuda visualmente)
-        const visor = document.getElementById('visor-total-rapido');
-        visor.classList.remove('hidden');
-        
-        // 2. Cambiamos de pantalla
-        irA('lista-section');
-        
-        // 3. Cargamos SOLO este mes
-        cargarDesdeSupabase('actual');
+        irA('visor-total-rapido'); // Mostramos solo la caja del monto
+        cargarDatos('monto-solo');
     };
 
+    // BOTÓN: VER LISTA COMPLETA
     document.getElementById('btn-ver-lista').onclick = () => {
-        document.getElementById('visor-total-rapido').classList.add('hidden');
         irA('lista-section');
-        cargarDesdeSupabase('todos');
+        cargarDatos('lista-completa');
     };
 
     document.getElementById('btn-historial-inicio').onclick = () => {
         irA('historial-section');
-        // Solo cargamos para actualizar las cajitas
-        cargarDesdeSupabase('nada'); 
+        cargarDatos('nada'); 
     };
 
     document.getElementById('btn-ingresar').onclick = () => {
@@ -164,9 +166,8 @@ document.addEventListener('DOMContentLoaded', () => {
         irA('form-section');
     };
 
-    // FORMULARIO
-    const form = document.getElementById('form-alumno');
-    form.onsubmit = async (e) => {
+    // Formulario y carga inicial
+    document.getElementById('form-alumno').onsubmit = async (e) => {
         e.preventDefault();
         const datos = {
             nombre_alumno: document.getElementById('nombre').value,
@@ -174,17 +175,15 @@ document.addEventListener('DOMContentLoaded', () => {
             fecha: document.getElementById('fecha').value,
             tipo: document.getElementById('tipo').value
         };
-        let url = `${SB_URL}/rest/v1/ingresos`;
-        let metodo = editandoID ? 'PATCH' : 'POST';
-        if (editandoID) url += `?id=eq.${editandoID}`;
-        await fetch(url, { method: metodo, headers: HEADERS, body: JSON.stringify(datos) });
+        await fetch(`${SB_URL}/rest/v1/ingresos${editandoID ? `?id=eq.${editandoID}` : ''}`, { 
+            method: editandoID ? 'PATCH' : 'POST', 
+            headers: HEADERS, 
+            body: JSON.stringify(datos) 
+        });
         location.reload();
     };
 
-    // Carga inicial silenciosa para el historial
-    fetch(`${SB_URL}/rest/v1/ingresos?select=*`, { headers: HEADERS })
-        .then(res => res.json())
-        .then(datos => actualizarHistorialDinamico(datos));
+    cargarDatos('nada'); // Carga historial en silencio
 });
 
 window.prepararEdicion = (id, nombre, monto, fecha, tipo) => {
