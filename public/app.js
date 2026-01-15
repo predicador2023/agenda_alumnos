@@ -1,66 +1,96 @@
-document.addEventListener('DOMContentLoaded', () => {
-    // --- 1. CONFIGURACIÓN SUPABASE ---
-    const SB_URL = "https://blmmnlruluciiusilvvm.supabase.co";
-    const SB_KEY = "sb_publishable_8V-tVlYCibGqYxZa9i_dlQ_t7Ir71aL"; // Tu clave anon
-    const HEADERS = {
-        "apikey": SB_KEY,
-        "Authorization": `Bearer ${SB_KEY}`,
-        "Content-Type": "application/json"
-    };
+// --- 1. CONFIGURACIÓN SUPABASE (Global) ---
+const SB_URL = "https://blmmnlruluciiusilvvm.supabase.co";
+const SB_KEY = "sb_publishable_8V-tVlYCibGqYxZa9i_dlQ_t7Ir71aL"; 
+const HEADERS = {
+    "apikey": SB_KEY,
+    "Authorization": `Bearer ${SB_KEY}`,
+    "Content-Type": "application/json",
+    "Prefer": "return=representation"
+};
 
-    // --- 2. REFERENCIAS AL HTML ---
-    const tablaIngresos = document.getElementById('tabla-ingresos');
-    const montoTotalDinamico = document.getElementById('monto-total-dinamico');
-    const formAlumno = document.getElementById('form-alumno');
-
-    // --- 3. FUNCIÓN PARA TRAER DATOS (GET) ---
-    async function obtenerDatos() {
-        try {
-            const respuesta = await fetch(`${SB_URL}/rest/v1/ingresos?select=*`, { headers: HEADERS });
-            const datos = await respuesta.json();
-            renderizarTabla(datos);
-        } catch (error) {
-            console.error("Error trayendo datos:", error);
-        }
+// --- 2. FUNCIONES DE NAVEGACIÓN (Globales para que los botones funcionen) ---
+function irA(pantallaId) {
+    // Ocultamos todas las secciones
+    document.getElementById('menu-principal').classList.add('hidden');
+    document.getElementById('form-section').classList.add('hidden');
+    document.getElementById('lista-section').classList.add('hidden');
+    
+    // Mostramos la que queremos
+    const destino = document.getElementById(pantallaId);
+    if(destino) {
+        destino.classList.remove('hidden');
     }
 
-    // --- 4. RENDERIZAR Y SUMAR MONTOS ---
-    function renderizarTabla(ingresos) {
-        if (!tablaIngresos) return;
-        tablaIngresos.innerHTML = '';
-        let sumaTotal = 0;
+    // Si vamos a la lista, cargamos los datos de Supabase
+    if(pantallaId === 'lista-section') {
+        cargarDesdeSupabase();
+    }
+}
 
-        // Filtrar solo Enero 2026 para el visor
-        const mesActual = "2026-01"; 
+// --- 3. TRAER DATOS Y SUMAR MONTOS ---
+async function cargarDesdeSupabase() {
+    const tabla = document.getElementById('tabla-ingresos');
+    const visorMonto = document.getElementById('monto-total-dinamico');
+    
+    try {
+        const res = await fetch(`${SB_URL}/rest/v1/ingresos?select=*&order=fecha.desc`, { headers: HEADERS });
+        const datos = await res.json();
         
-        ingresos.forEach(i => {
+        if (!tabla) return;
+        tabla.innerHTML = '';
+        let sumaEnero = 0;
+
+        datos.forEach(i => {
             const montoNum = parseFloat(i.monto) || 0;
-            
-            // Sumamos al total si es de enero (independiente del formato)
-            if (i.fecha && i.fecha.includes(mesActual)) {
-                sumaTotal += montoNum;
+            // Verificamos si es de Enero 2026 para el visor
+            if (i.fecha && i.fecha.includes('2026-01')) {
+                sumaEnero += montoNum;
             }
 
-            tablaIngresos.innerHTML += `
+            tabla.innerHTML += `
                 <tr>
                     <td><strong>${i.nombre}</strong><br><small>${i.fecha}</small></td>
                     <td style="color:green; font-weight:bold; text-align:right;">
                         $ ${montoNum.toLocaleString('es-AR')}
                     </td>
                     <td style="text-align:center;">
-                        <button onclick="borrarDeSupabase('${i.id}')" style="border:none; background:none; cursor:pointer;">🗑️</button>
+                        <button onclick="borrarDeSupabase('${i.id}')" style="border:none; background:none; font-size:18px;">🗑️</button>
                     </td>
                 </tr>
             `;
         });
 
-        const totalTxt = `$ ${sumaTotal.toLocaleString('es-AR')}`;
-        if (montoTotalDinamico) montoTotalDinamico.innerText = totalTxt;
+        if (visorMonto) {
+            visorMonto.innerText = `$ ${sumaEnero.toLocaleString('es-AR')}`;
+        }
+    } catch (err) {
+        console.error("Error al cargar:", err);
     }
+}
 
-    // --- 5. GUARDAR EN SUPABASE (POST) ---
-    if (formAlumno) {
-        formAlumno.onsubmit = async (e) => {
+// --- 4. BORRAR REGISTRO ---
+async function borrarDeSupabase(id) {
+    if (!confirm("¿Eliminar este registro de la nube?")) return;
+    try {
+        await fetch(`${SB_URL}/rest/v1/ingresos?id=eq.${id}`, {
+            method: 'DELETE',
+            headers: HEADERS
+        });
+        cargarDesdeSupabase();
+    } catch (err) {
+        alert("No se pudo borrar");
+    }
+}
+
+// --- 5. INICIALIZACIÓN ---
+document.addEventListener('DOMContentLoaded', () => {
+    // Carga inicial para el visor verde del home
+    cargarDesdeSupabase();
+
+    // Configurar el formulario
+    const form = document.getElementById('form-alumno');
+    if (form) {
+        form.onsubmit = async (e) => {
             e.preventDefault();
             const nuevo = {
                 nombre: document.getElementById('nombre').value,
@@ -76,29 +106,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     body: JSON.stringify(nuevo)
                 });
                 if (res.ok) {
-                    alert("✅ Guardado en la nube");
-                    location.reload();
+                    alert("✅ Guardado en Supabase");
+                    form.reset();
+                    irA('menu-principal');
+                    cargarDesdeSupabase();
                 }
             } catch (err) {
                 alert("Error al guardar");
             }
         };
     }
-
-    // --- 6. BORRAR DE SUPABASE (DELETE) ---
-    window.borrarDeSupabase = async (id) => {
-        if (!confirm("¿Borrar este registro?")) return;
-        try {
-            await fetch(`${SB_URL}/rest/v1/ingresos?id=eq.${id}`, {
-                method: 'DELETE',
-                headers: HEADERS
-            });
-            location.reload();
-        } catch (err) {
-            console.error("Error al borrar");
-        }
-    };
-
-    // Ejecutar al cargar la página
-    obtenerDatos();
 });
