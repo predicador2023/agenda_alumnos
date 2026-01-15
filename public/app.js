@@ -23,6 +23,7 @@ async function cargarDatos(modo = 'todos') {
     const tabla = document.getElementById('tabla-ingresos');
     const visorMontoTexto = document.getElementById('monto-total-dinamico');
     const visorContenedor = document.getElementById('visor-total-rapido');
+    const listaSection = document.getElementById('lista-section');
     
     try {
         const res = await fetch(`${SB_URL}/rest/v1/ingresos?select=*&order=fecha.desc`, { headers: HEADERS });
@@ -33,7 +34,7 @@ async function cargarDatos(modo = 'todos') {
         const ahora = new Date();
         const mesActualRef = `${ahora.getFullYear()}-${String(ahora.getMonth() + 1).padStart(2, '0')}`;
         
-        // CÁLCULO SIEMPRE DISPONIBLE
+        // CÁLCULO DEL MES ACTUAL
         const soloMesActual = datos.filter(i => i.fecha && i.fecha.includes(mesActualRef));
         const sumaMesActual = soloMesActual.reduce((acc, curr) => acc + (parseFloat(curr.monto) || 0), 0);
         
@@ -44,18 +45,20 @@ async function cargarDatos(modo = 'todos') {
         // --- LÓGICA DE VISUALIZACIÓN ---
         
         if (modo === 'monto-solo') {
-            // 1. Mostramos el visor verde
-            if (visorContenedor) visorContenedor.classList.remove('hidden');
-            // 2. Vaciamos la tabla para que no se vea NINGÚN alumno
-            if (tabla) tabla.innerHTML = '';
-            // 3. Agregamos un mensaje opcional o dejamos vacío
-            console.log("Mostrando solo monto del mes.");
+            if (visorContenedor && listaSection) {
+                // TELETRANSPORTE: Movemos el visor adentro de la sección de lista
+                listaSection.prepend(visorContenedor); 
+                visorContenedor.classList.remove('hidden');
+                
+                // Aseguramos que la animación de pulso se active
+                const cajaVerde = visorContenedor.querySelector('.visor-verde-box');
+                if (cajaVerde) cajaVerde.classList.add('anim-pulse');
+            }
+            if (tabla) tabla.innerHTML = ''; // Vaciamos la lista para que no se vea nada abajo
         } 
         
         else if (modo === 'lista-completa') {
-            // 1. Ocultamos el visor verde
             if (visorContenedor) visorContenedor.classList.add('hidden');
-            // 2. Llenamos la tabla con TODO
             if (tabla) {
                 tabla.innerHTML = '';
                 datos.forEach(i => renderizarFila(i, tabla));
@@ -85,8 +88,8 @@ function renderizarFila(i, tabla) {
             <td class="monto-positivo">$${montoNum.toLocaleString('es-AR')}</td>
             <td>
                 <div style="display:flex; gap:12px; justify-content:flex-end;">
-                    <span onclick="prepararEdicion('${i.id}','${i.nombre_alumno}','${i.monto}','${i.fecha}','${i.tipo}')" style="cursor:pointer;">✏️</span>
-                    <span onclick="borrarRegistro('${i.id}')" style="cursor:pointer;">🗑️</span>
+                    <span onclick="prepararEdicion('${i.id}','${i.nombre_alumno}','${i.monto}','${i.fecha}','${i.tipo}')" style="cursor:pointer; font-size:18px;">✏️</span>
+                    <span onclick="borrarRegistro('${i.id}')" style="cursor:pointer; font-size:18px;">🗑️</span>
                 </div>
             </td>
         </tr>
@@ -145,10 +148,10 @@ function actualizarHistorialDinamico(datos) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    // BOTÓN: VER MES ACTUAL (SOLO MONTO)
+    // BOTÓN: VER MES ACTUAL (TELETRANSPORTE Y CARGA)
     document.getElementById('btn-mes-actual-inicio').onclick = () => {
-        irA('lista-section'); // Vamos a la sección de lista, pero...
-        cargarDatos('monto-solo'); // ...le ordenamos que la limpie y solo deje el visor.
+        irA('lista-section'); 
+        cargarDatos('monto-solo'); 
     };
 
     document.getElementById('btn-ver-lista').onclick = () => {
@@ -167,7 +170,6 @@ document.addEventListener('DOMContentLoaded', () => {
         irA('form-section');
     };
 
-    // Formulario
     document.getElementById('form-alumno').onsubmit = async (e) => {
         e.preventDefault();
         const datos = {
