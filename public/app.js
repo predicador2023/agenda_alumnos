@@ -11,17 +11,90 @@ const HEADERS = {
 let editandoID = null;
 
 /**
- * NAVEGACIÓN: Cambia entre las secciones de la app
+ * 1. CEREBRO DINÁMICO: Crea las Cajitas Desplegables por Año
+ */
+function actualizarHistorialDesplegable(datos) {
+    const contenedor = document.getElementById('contenedor-historial-desplegable');
+    if (!contenedor) return;
+
+    contenedor.innerHTML = ''; // Limpiamos
+
+    const ahora = new Date();
+    const mesActualRef = `${ahora.getFullYear()}-${String(ahora.getMonth() + 1).padStart(2, '0')}`;
+
+    // Agrupamos meses por año
+    const historialAgrupado = {};
+    datos.forEach(i => {
+        const fechaStr = i.fecha || "";
+        const mesAnio = fechaStr.slice(0, 7); 
+        const anio = fechaStr.slice(0, 4);
+
+        if (mesAnio !== "" && mesAnio < mesActualRef) {
+            if (!historialAgrupado[anio]) historialAgrupado[anio] = new Set();
+            historialAgrupado[anio].add(mesAnio);
+        }
+    });
+
+    const aniosDisponibles = Object.keys(historialAgrupado).sort().reverse();
+
+    if (aniosDisponibles.length === 0) {
+        contenedor.innerHTML = '<p style="text-align:center; color:gray;">No hay historial aún.</p>';
+        return;
+    }
+
+    // Construimos los acordeones de años
+    aniosDisponibles.forEach(anio => {
+        const detalles = document.createElement('details');
+        detalles.style.marginBottom = "10px";
+        detalles.style.border = "1px solid #ddd";
+        detalles.style.borderRadius = "8px";
+
+        const sumario = document.createElement('summary');
+        sumario.innerHTML = `<b>📅 Año ${anio}</b>`;
+        sumario.style.padding = "10px";
+        sumario.style.cursor = "pointer";
+
+        const divMeses = document.createElement('div');
+        divMeses.style.display = "grid";
+        divMeses.style.gridTemplateColumns = "repeat(3, 1fr)";
+        divMeses.style.gap = "8px";
+        divMeses.style.padding = "10px";
+
+        const meses = Array.from(historialAgrupado[anio]).sort().reverse();
+        meses.forEach(mesStr => {
+            const [_, numMes] = mesStr.split('-');
+            const nombres = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+            
+            const btn = document.createElement('button');
+            btn.innerText = nombres[parseInt(numMes) - 1];
+            btn.style.padding = "8px";
+            btn.style.borderRadius = "5px";
+            btn.style.border = "1px solid #007bff";
+            btn.style.backgroundColor = "white";
+            btn.style.color = "#007bff";
+            btn.onclick = () => {
+                irA('lista-section');
+                cargarDesdeSupabase(mesStr);
+            };
+            divMeses.appendChild(btn);
+        });
+
+        detalles.appendChild(sumario);
+        detalles.appendChild(divMeses);
+        contenedor.appendChild(detalles);
+    });
+}
+
+/**
+ * 2. NAVEGACIÓN
  */
 function irA(pantallaId) {
     document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
     document.getElementById(pantallaId).classList.remove('hidden');
-    // Si entramos a la lista, refrescamos los datos automáticamente
-    if (pantallaId === 'lista-section') cargarDesdeSupabase();
 }
 
 /**
- * CARGA DE DATOS: Obtiene registros, calcula enero y llena la tabla
+ * 3. CARGA DE DATOS
  */
 async function cargarDesdeSupabase(filtro = 'todos') {
     const tabla = document.getElementById('tabla-ingresos');
@@ -31,56 +104,53 @@ async function cargarDesdeSupabase(filtro = 'todos') {
         const res = await fetch(`${SB_URL}/rest/v1/ingresos?select=*&order=fecha.desc`, { headers: HEADERS });
         const datos = await res.json();
         
+        // Actualizamos el historial cada vez que cargamos datos
+        actualizarHistorialDesplegable(datos);
+
         if (!tabla) return;
         tabla.innerHTML = ''; 
+        
+        const ahora = new Date();
+        const mesActualRef = `${ahora.getFullYear()}-${String(ahora.getMonth() + 1).padStart(2, '0')}`;
         let sumaEnero = 0;
 
         datos.forEach(i => {
-            const esEnero = i.fecha && i.fecha.includes('2026-01');
+            const mesRegistro = i.fecha ? i.fecha.slice(0, 7) : "";
+            const esMesActual = (mesRegistro === mesActualRef);
             
-            // Lógica de filtrado: si pedimos 'anteriores', ocultamos enero
-            if (filtro === 'anteriores' && esEnero) return;
-            
-            const montoNum = parseFloat(i.monto) || 0;
-            if (esEnero) sumaEnero += montoNum;
+            // Filtros
+            if (filtro === 'actual' && !esMesActual) return;
+            if (filtro === 'anteriores' && esMesActual) return;
+            if (filtro !== 'todos' && filtro !== 'actual' && filtro !== 'anteriores' && filtro !== mesRegistro) return;
 
-            // Inyectamos la fila (Sin totales al final, solo datos)
+            const montoNum = parseFloat(i.monto) || 0;
+            if (esMesActual) sumaEnero += montoNum;
+
             tabla.innerHTML += `
                 <tr>
                     <td>
                         <span class="nombre-tabla">${i.nombre_alumno || 'Sin Nombre'}</span>
-                        <span class="info-sub-tabla">${i.fecha} • <b>${i.tipo || 'diario'}</b></span>
+                        <span class="info-sub-tabla">${i.fecha} • <b>${i.tipo}</b></span>
                     </td>
-                    <td class="monto-positivo">
-                        $${montoNum.toLocaleString('es-AR')}
-                    </td>
+                    <td class="monto-positivo">$${montoNum.toLocaleString('es-AR')}</td>
                     <td>
                         <div style="display:flex; gap:12px; justify-content:flex-end;">
-                            <span onclick="prepararEdicion('${i.id}','${i.nombre_alumno}','${i.monto}','${i.fecha}','${i.tipo}')" style="cursor:pointer; font-size:18px;">✏️</span>
-                            <span onclick="borrarRegistro('${i.id}')" style="cursor:pointer; font-size:18px;">🗑️</span>
+                            <span onclick="prepararEdicion('${i.id}','${i.nombre_alumno}','${i.monto}','${i.fecha}','${i.tipo}')" style="cursor:pointer;">✏️</span>
+                            <span onclick="borrarRegistro('${i.id}')" style="cursor:pointer;">🗑️</span>
                         </div>
                     </td>
                 </tr>
             `;
         });
 
-        // Actualizamos el Visor de Inicio con Animación
         if (visorMontoInicio) {
-            visorMontoInicio.classList.remove('animar-entrada');
             visorMontoInicio.innerText = `$ ${sumaEnero.toLocaleString('es-AR')}`;
-            // Reinicio de animación
-            void visorMontoInicio.offsetWidth; 
-            visorMontoInicio.classList.add('animar-entrada');
         }
         
-    } catch (err) { 
-        console.error("Error en la carga:", err); 
-    }
+    } catch (err) { console.error("Error:", err); }
 }
 
-/**
- * EDICIÓN: Carga los datos de un registro en el formulario
- */
+// ... (El resto de funciones como borrar y prepararEdicion siguen igual)
 window.prepararEdicion = (id, nombre, monto, fecha, tipo) => {
     editandoID = id;
     document.getElementById('nombre').value = nombre;
@@ -88,47 +158,36 @@ window.prepararEdicion = (id, nombre, monto, fecha, tipo) => {
     document.getElementById('fecha').value = fecha;
     document.getElementById('tipo').value = tipo || 'Diario';
     irA('form-section');
-    document.querySelector('.btn-guardar').innerText = "Actualizar Registro";
 };
 
-/**
- * ELIMINACIÓN: Borra registro de la base de datos
- */
 window.borrarRegistro = async (id) => {
-    if (!confirm("¿Eliminar este pago definitivamente?")) return;
+    if (!confirm("¿Eliminar este pago?")) return;
     await fetch(`${SB_URL}/rest/v1/ingresos?id=eq.${id}`, { method: 'DELETE', headers: HEADERS });
     cargarDesdeSupabase();
 };
 
-/**
- * INICIALIZACIÓN: Configura botones y envío de formulario
- */
 document.addEventListener('DOMContentLoaded', () => {
-    
-    // Botón para ir al formulario (Crear nuevo)
     document.getElementById('btn-ingresar').onclick = () => {
         editandoID = null;
         document.getElementById('form-alumno').reset();
-        document.querySelector('.btn-guardar').innerText = "Guardar Registro";
         irA('form-section');
     };
     
-    // Botón Ver Lista completo
-    document.getElementById('btn-ver-lista').onclick = () => irA('lista-section');
+    document.getElementById('btn-ver-lista').onclick = () => {
+        irA('lista-section');
+        cargarDesdeSupabase('todos');
+    };
     
-    // Botón Mes Actual (Inicio)
     document.getElementById('btn-mes-actual-inicio').onclick = () => {
-        document.getElementById('visor-total-rapido').classList.remove('hidden');
-        cargarDesdeSupabase();
+        irA('lista-section');
+        cargarDesdeSupabase('actual');
     };
 
-    // Botón Historial (Inicio)
     document.getElementById('btn-historial-inicio').onclick = () => {
-        irA('lista-section');
+        irA('historial-section'); // <--- IMPORTANTE: Nueva pantalla de historial
         cargarDesdeSupabase('anteriores');
     };
 
-    // Envío del Formulario (Guardar/Editar)
     const form = document.getElementById('form-alumno');
     form.onsubmit = async (e) => {
         e.preventDefault();
@@ -145,11 +204,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const res = await fetch(url, { method: metodo, headers: HEADERS, body: JSON.stringify(datos) });
         if (res.ok) {
-            alert(editandoID ? "✅ Registro actualizado" : "✅ Registro guardado");
+            alert("Operación exitosa");
             location.reload(); 
         }
     };
 
-    // Carga inicial para el visor
     cargarDesdeSupabase();
 });
