@@ -1,116 +1,144 @@
-// --- VARIABLES ---
-const menuPrincipal = document.getElementById('menu-principal');
-const formSection = document.getElementById('form-section');
-const listaSection = document.getElementById('lista-section');
-const tablaIngresos = document.getElementById('tabla-ingresos');
-const montoTotalDinamico = document.getElementById('monto-total-dinamico');
-const visorTotalRapido = document.getElementById('visor-total-rapido');
+document.addEventListener('DOMContentLoaded', () => {
+    // --- 1. REFERENCIAS AL HTML ---
+    const menuPrincipal = document.getElementById('menu-principal');
+    const formSection = document.getElementById('form-section');
+    const listaSection = document.getElementById('lista-section');
+    const tablaIngresos = document.getElementById('tabla-ingresos');
+    const montoTotalDinamico = document.getElementById('monto-total-dinamico');
+    const visorTotalRapido = document.getElementById('visor-total-rapido');
+    const filtroMesDinamico = document.getElementById('filtro-mes-dinamico');
 
-// --- FUNCIÓN PARA MOSTRAR PANTALLAS ---
-function irA(pantalla) {
-    menuPrincipal.classList.add('hidden');
-    formSection.classList.add('hidden');
-    listaSection.classList.add('hidden');
-    pantalla.classList.remove('hidden');
-}
+    // --- 2. FUNCIÓN DE NAVEGACIÓN ---
+    function irA(pantalla) {
+        if (!pantalla) return;
+        menuPrincipal.classList.add('hidden');
+        formSection.classList.add('hidden');
+        listaSection.classList.add('hidden');
+        pantalla.classList.remove('hidden');
+    }
 
-// --- GUARDAR ---
-document.getElementById('form-alumno').addEventListener('submit', (e) => {
-    e.preventDefault();
-    const ingresos = JSON.parse(localStorage.getItem('ingresos')) || [];
-    const nuevo = {
-        id: Date.now().toString(),
-        nombre: document.getElementById('nombre').value,
-        monto: document.getElementById('monto').value,
-        fecha: document.getElementById('fecha').value,
-        tipo: document.getElementById('tipo').value
-    };
-    ingresos.push(nuevo);
-    localStorage.setItem('ingresos', JSON.stringify(ingresos));
-    alert("✅ Guardado correctamente");
-    location.reload();
+    // --- 3. RENDERIZAR TABLA Y SUMAR MONTOS ---
+    function cargarDatos(filtro = 'todos') {
+        const ingresos = JSON.parse(localStorage.getItem('ingresos')) || [];
+        if (!tablaIngresos) return;
+        
+        tablaIngresos.innerHTML = '';
+        let sumaTotal = 0;
+
+        // FILTRO FLEXIBLE: Busca Enero o 2026 en cualquier formato (lunes, ayer y hoy)
+        const datosFiltrados = (filtro === 'actual') 
+            ? ingresos.filter(i => {
+                if (!i.fecha) return false;
+                return i.fecha.includes('2026-01') || i.fecha.includes('/01/') || i.fecha.includes('-01-');
+              }) 
+            : ingresos;
+
+        if (datosFiltrados.length === 0) {
+            tablaIngresos.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:20px;">No hay registros este mes</td></tr>';
+        } else {
+            datosFiltrados.forEach(i => {
+                const montoNum = parseFloat(i.monto) || 0;
+                sumaTotal += montoNum;
+                
+                tablaIngresos.innerHTML += `
+                    <tr>
+                        <td><strong>${i.nombre}</strong><br><small>${i.fecha} - ${i.tipo}</small></td>
+                        <td style="color:green; font-weight:800; text-align:right;">
+                            $ ${montoNum.toLocaleString('es-AR')}
+                        </td>
+                        <td style="text-align:center;">
+                            <button onclick="borrarRegistro('${i.id}')" style="border:none; background:none; font-size:18px; cursor:pointer;">🗑️</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        // Actualizar los visores de MONTOS
+        const totalFormateado = `$ ${sumaTotal.toLocaleString('es-AR')}`;
+        if (montoTotalDinamico) montoTotalDinamico.innerText = totalFormateado;
+        
+        const resResumen = document.getElementById('resultado-resumen');
+        if (resResumen) resResumen.innerText = `Total: ${totalFormateado}`;
+    }
+
+    // --- 4. EVENTOS DE BOTONES ---
+
+    // Botón "Ingresar Alumno"
+    const btnIngresar = document.getElementById('btn-ingresar');
+    if (btnIngresar) {
+        btnIngresar.onclick = () => {
+            irA(formSection);
+            // Setea fecha de hoy 14/01/2026 por defecto
+            document.getElementById('fecha').value = new Date().toISOString().split('T')[0];
+        };
+    }
+
+    // Botón "Ver Lista Completa"
+    const btnVerLista = document.getElementById('btn-ver-lista');
+    if (btnVerLista) {
+        btnVerLista.onclick = () => {
+            irA(listaSection);
+            if(filtroMesDinamico) filtroMesDinamico.value = "todos";
+            cargarDatos('todos');
+        };
+    }
+
+    // Botón "Ver Mes Actual" (Inicio)
+    const btnMesActual = document.getElementById('btn-mes-actual-inicio');
+    if (btnMesActual) {
+        btnMesActual.onclick = () => {
+            if (visorTotalRapido) visorTotalRapido.classList.remove('hidden');
+            cargarDatos('actual');
+        };
+    }
+
+    // Botón "Meses Anteriores"
+    const btnHistorial = document.getElementById('btn-historial-inicio');
+    if (btnHistorial) {
+        btnHistorial.onclick = () => {
+            irA(listaSection);
+            // Mostramos todo el historial disponible
+            cargarDatos('todos');
+        };
+    }
+
+    // Selector de meses dentro de la lista
+    if (filtroMesDinamico) {
+        filtroMesDinamico.onchange = (e) => {
+            cargarDatos(e.target.value);
+        };
+    }
+
+    // --- 5. GUARDAR REGISTRO ---
+    const form = document.getElementById('form-alumno');
+    if (form) {
+        form.onsubmit = (e) => {
+            e.preventDefault();
+            const ingresos = JSON.parse(localStorage.getItem('ingresos')) || [];
+            
+            const nuevoRegistro = {
+                id: Date.now().toString(),
+                nombre: document.getElementById('nombre').value,
+                monto: document.getElementById('monto').value,
+                fecha: document.getElementById('fecha').value,
+                tipo: document.getElementById('tipo').value
+            };
+
+            ingresos.push(nuevoRegistro);
+            localStorage.setItem('ingresos', JSON.stringify(ingresos));
+            alert("✅ Registro guardado: " + nuevoRegistro.nombre);
+            location.reload(); // Recarga para volver al inicio prolijo
+        };
+    }
 });
 
-// --- RENDERIZAR (MUESTRA ALUMNOS Y SUMA MONTOS) ---
-function cargarDatos(filtro = 'todos') {
-    const ingresos = JSON.parse(localStorage.getItem('ingresos')) || [];
-    tablaIngresos.innerHTML = '';
-    let suma = 0;
-
-    // Filtramos para ENERO 2026 (Mes Actual)
-    const datos = (filtro === 'actual') 
-        ? ingresos.filter(i => i.fecha.startsWith('2026-01')) 
-        : ingresos;
-
-    if (datos.length === 0) {
-        tablaIngresos.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:20px;">No hay registros</td></tr>';
-    } else {
-        datos.forEach(i => {
-            const m = parseFloat(i.monto) || 0;
-            suma += m;
-            tablaIngresos.innerHTML += `
-                <tr>
-                    <td><strong>${i.nombre}</strong><br><small>${i.fecha}</small></td>
-                    <td style="color:green; font-weight:bold; text-align:right;">$ ${m.toLocaleString('es-AR')}</td>
-                    <td style="text-align:center;"><button onclick="borrar('${i.id}')" style="border:none; background:none; cursor:pointer;">🗑️</button></td>
-                </tr>
-            `;
-        });
-    }
-
-    // Mostrar MONTOS en pantalla
-    const totalTexto = `$ ${suma.toLocaleString('es-AR')}`;
-    montoTotalDinamico.innerText = totalTexto;
-    document.getElementById('resultado-resumen').innerText = `Total: ${totalTexto}`;
-}
-
-// --- BOTONES DE NAVEGACIÓN ---
-
-// 1. Botón Ingresar
-document.getElementById('btn-ingresar').onclick = () => {
-    irA(formSection);
-    document.getElementById('fecha').value = "2026-01-14";
-};
-
-// 2. Botón Ver Lista Completa
-document.getElementById('btn-ver-lista').onclick = () => {
-    irA(listaSection);
-    document.getElementById('filtro-mes-dinamico').value = "todos";
-    cargarDatos('todos');
-};
-
-// 3. Botón Mes Actual (Visor Verde)
-document.getElementById('btn-mes-actual-inicio').onclick = () => {
-    visorTotalRapido.classList.remove('hidden'); // Muestra el cuadro verde
-    cargarDatos('actual');
-};
-
-// 4. Botón Meses Anteriores (Historial)
-document.getElementById('btn-historial-inicio').onclick = () => {
-    irA(listaSection);
-    // Filtrar todo lo que NO sea Enero 2026
-    const ingresos = JSON.parse(localStorage.getItem('ingresos')) || [];
-    const historial = ingresos.filter(i => !i.fecha.startsWith('2026-01'));
-    
-    if (historial.length === 0) {
-        alert("📅 Enero 2026 es tu primer mes. No hay historial previo todavía.");
-        cargarDatos('actual');
-    } else {
-        cargarDatos('todos');
-    }
-};
-
-// 5. Selector de meses dentro de la lista
-document.getElementById('filtro-mes-dinamico').onchange = (e) => {
-    cargarDatos(e.target.value);
-};
-
-// --- BORRAR ---
-window.borrar = (id) => {
-    if(confirm("¿Seguro que querés borrar este pago?")) {
+// --- 6. FUNCIÓN BORRAR (Global para que el HTML la vea) ---
+window.borrarRegistro = (id) => {
+    if (confirm("¿Estás seguro de eliminar este registro?")) {
         let ingresos = JSON.parse(localStorage.getItem('ingresos')) || [];
         ingresos = ingresos.filter(i => i.id !== id);
         localStorage.setItem('ingresos', JSON.stringify(ingresos));
-        cargarDatos();
+        location.reload();
     }
 };
