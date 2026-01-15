@@ -11,8 +11,7 @@ const HEADERS = {
 let editandoID = null;
 
 /**
- * 1. FUNCIÓN HISTORIAL: Esto es lo ÚNICO nuevo y dinámico.
- * Crea las cajitas de los años para el botón "Meses Anteriores".
+ * 1. FUNCIÓN HISTORIAL DINÁMICO
  */
 function actualizarHistorialDinamico(datos) {
     const contenedor = document.getElementById('contenedor-historial-desplegable');
@@ -22,7 +21,6 @@ function actualizarHistorialDinamico(datos) {
     const ahora = new Date();
     const mesActualRef = `${ahora.getFullYear()}-${String(ahora.getMonth() + 1).padStart(2, '0')}`;
 
-    // Agrupamos meses pasados por año
     const historialAgrupado = {};
     datos.forEach(i => {
         const fechaStr = i.fecha || "";
@@ -47,6 +45,7 @@ function actualizarHistorialDinamico(datos) {
         detalles.style.marginBottom = "10px";
         detalles.style.border = "1px solid #ddd";
         detalles.style.borderRadius = "8px";
+        detalles.style.backgroundColor = "#fff";
 
         const sumario = document.createElement('summary');
         sumario.innerHTML = `<b>📅 Año ${anio}</b>`;
@@ -65,7 +64,7 @@ function actualizarHistorialDinamico(datos) {
             const nombres = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
             const btn = document.createElement('button');
             btn.innerText = nombres[parseInt(numMes) - 1];
-            btn.className = "btn-sub-resumen"; // Usa tus mismos estilos
+            btn.className = "btn-sub-resumen"; 
             btn.onclick = () => {
                 irA('lista-section');
                 cargarDesdeSupabase(mesStr);
@@ -82,34 +81,43 @@ function actualizarHistorialDinamico(datos) {
 function irA(pantallaId) {
     document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
     document.getElementById(pantallaId).classList.remove('hidden');
-    if (pantallaId === 'lista-section') cargarDesdeSupabase();
+    // Al salir de la lista general, ocultamos el visor para que no estorbe
+    if (pantallaId !== 'lista-section') {
+        const visor = document.getElementById('visor-total-rapido');
+        if (visor) visor.classList.add('hidden');
+    }
 }
 
+/**
+ * 3. CARGA DE DATOS + EFECTO DE PULSO
+ */
 async function cargarDesdeSupabase(filtro = 'todos') {
     const tabla = document.getElementById('tabla-ingresos');
     const visorMontoInicio = document.getElementById('monto-total-dinamico');
+    const contenedorVisor = document.getElementById('visor-total-rapido');
     
     try {
         const res = await fetch(`${SB_URL}/rest/v1/ingresos?select=*&order=fecha.desc`, { headers: HEADERS });
         const datos = await res.json();
         
-        // El historial se actualiza en segundo plano
         actualizarHistorialDinamico(datos);
 
         if (!tabla) return;
         tabla.innerHTML = ''; 
+        
+        const ahora = new Date();
+        const mesActualRef = `${ahora.getFullYear()}-${String(ahora.getMonth() + 1).padStart(2, '0')}`;
         let sumaEnero = 0;
 
         datos.forEach(i => {
-            const esEnero = i.fecha && i.fecha.includes('2026-01');
+            const mesRegistro = i.fecha ? i.fecha.slice(0, 7) : "";
+            const esMesActual = (mesRegistro === mesActualRef);
             
-            // Lógica de filtrado original (no la tocamos)
-            if (filtro === 'anteriores' && esEnero) return;
-            // Si el filtro es un mes específico del historial
+            if (filtro === 'anteriores' && esMesActual) return;
             if (filtro !== 'todos' && filtro !== 'anteriores' && !i.fecha.includes(filtro)) return;
 
             const montoNum = parseFloat(i.monto) || 0;
-            if (esEnero) sumaEnero += montoNum;
+            if (esMesActual) sumaEnero += montoNum;
 
             tabla.innerHTML += `
                 <tr>
@@ -128,8 +136,14 @@ async function cargarDesdeSupabase(filtro = 'todos') {
             `;
         });
 
+        // RESTAURACIÓN DEL EFECTO
         if (visorMontoInicio) {
             visorMontoInicio.innerText = `$ ${sumaEnero.toLocaleString('es-AR')}`;
+            if (contenedorVisor && filtro === 'todos' || filtro === 'actual' || filtro.includes(mesActualRef)) {
+                contenedorVisor.classList.remove('hidden');
+                const cajaVerde = contenedorVisor.querySelector('.visor-verde-box');
+                if (cajaVerde) cajaVerde.classList.add('anim-pulse'); 
+            }
         }
         
     } catch (err) { console.error("Error:", err); }
@@ -151,21 +165,22 @@ window.borrarRegistro = async (id) => {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-    // BOTONES ORIGINALES (SIN TOCAR)
     document.getElementById('btn-ingresar').onclick = () => {
         editandoID = null;
         document.getElementById('form-alumno').reset();
         irA('form-section');
     };
     
-    document.getElementById('btn-ver-lista').onclick = () => irA('lista-section');
+    document.getElementById('btn-ver-lista').onclick = () => {
+        irA('lista-section');
+        cargarDesdeSupabase('todos');
+    };
     
     document.getElementById('btn-mes-actual-inicio').onclick = () => {
-        document.getElementById('visor-total-rapido').classList.remove('hidden');
-        cargarDesdeSupabase();
+        irA('lista-section');
+        cargarDesdeSupabase('todos'); // El filtro interno se encarga de sumar enero
     };
 
-    // UNICO CAMBIO: Ahora abre la pantalla de historial dinámico
     document.getElementById('btn-historial-inicio').onclick = () => {
         irA('historial-section');
         cargarDesdeSupabase('anteriores');
