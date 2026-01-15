@@ -12,11 +12,12 @@ let editandoID = null;
 
 function irA(pantallaId) {
     document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
-    document.getElementById(pantallaId).classList.remove('hidden');
+    const pantalla = document.getElementById(pantallaId);
+    if(pantalla) pantalla.classList.remove('hidden');
 }
 
 /**
- * CARGA DE DATOS: Lógica separada para monto y lista
+ * CARGA DE DATOS: Control absoluto de lo que se muestra
  */
 async function cargarDatos(modo = 'todos') {
     const tabla = document.getElementById('tabla-ingresos');
@@ -32,7 +33,7 @@ async function cargarDatos(modo = 'todos') {
         const ahora = new Date();
         const mesActualRef = `${ahora.getFullYear()}-${String(ahora.getMonth() + 1).padStart(2, '0')}`;
         
-        // 1. CÁLCULO DEL MONTO (Mes actual siempre)
+        // CÁLCULO SIEMPRE DISPONIBLE
         const soloMesActual = datos.filter(i => i.fecha && i.fecha.includes(mesActualRef));
         const sumaMesActual = soloMesActual.reduce((acc, curr) => acc + (parseFloat(curr.monto) || 0), 0);
         
@@ -40,36 +41,37 @@ async function cargarDatos(modo = 'todos') {
             visorMontoTexto.innerText = `$ ${sumaMesActual.toLocaleString('es-AR')}`;
         }
 
-        // 2. LÓGICA DE PANTALLAS
+        // --- LÓGICA DE VISUALIZACIÓN ---
+        
         if (modo === 'monto-solo') {
-            // SOLO EL MONTO: Mostramos visor, ocultamos sección de lista
-            if (visorContenedor) {
-                visorContenedor.classList.remove('hidden');
-                // Lo movemos fuera de la sección de lista si es necesario para que se vea solo
-                document.body.insertBefore(visorContenedor, document.getElementById('historial-section'));
-            }
-            document.getElementById('lista-section').classList.add('hidden');
+            // 1. Mostramos el visor verde
+            if (visorContenedor) visorContenedor.classList.remove('hidden');
+            // 2. Vaciamos la tabla para que no se vea NINGÚN alumno
+            if (tabla) tabla.innerHTML = '';
+            // 3. Agregamos un mensaje opcional o dejamos vacío
+            console.log("Mostrando solo monto del mes.");
         } 
+        
         else if (modo === 'lista-completa') {
-            // SOLO LA LISTA: Ocultamos visor, llenamos tabla
+            // 1. Ocultamos el visor verde
             if (visorContenedor) visorContenedor.classList.add('hidden');
+            // 2. Llenamos la tabla con TODO
             if (tabla) {
                 tabla.innerHTML = '';
                 datos.forEach(i => renderizarFila(i, tabla));
             }
         }
+        
         else if (modo === 'historial-mes') {
-            // LISTA FILTRADA POR HISTORIAL: Ocultamos visor, filtramos datos
             if (visorContenedor) visorContenedor.classList.add('hidden');
             if (tabla) {
                 tabla.innerHTML = '';
-                // Aquí 'filtroHistorial' sería el mes seleccionado
                 const filtrados = datos.filter(i => i.fecha && i.fecha.includes(window.mesSeleccionado));
                 filtrados.forEach(i => renderizarFila(i, tabla));
             }
         }
         
-    } catch (err) { console.error("Error:", err); }
+    } catch (err) { console.error("Error cargando datos:", err); }
 }
 
 function renderizarFila(i, tabla) {
@@ -143,13 +145,12 @@ function actualizarHistorialDinamico(datos) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    // BOTÓN: VER MES ACTUAL (SOLO EL MONTO)
+    // BOTÓN: VER MES ACTUAL (SOLO MONTO)
     document.getElementById('btn-mes-actual-inicio').onclick = () => {
-        irA('visor-total-rapido'); // Mostramos solo la caja del monto
-        cargarDatos('monto-solo');
+        irA('lista-section'); // Vamos a la sección de lista, pero...
+        cargarDatos('monto-solo'); // ...le ordenamos que la limpie y solo deje el visor.
     };
 
-    // BOTÓN: VER LISTA COMPLETA
     document.getElementById('btn-ver-lista').onclick = () => {
         irA('lista-section');
         cargarDatos('lista-completa');
@@ -166,7 +167,7 @@ document.addEventListener('DOMContentLoaded', () => {
         irA('form-section');
     };
 
-    // Formulario y carga inicial
+    // Formulario
     document.getElementById('form-alumno').onsubmit = async (e) => {
         e.preventDefault();
         const datos = {
@@ -183,7 +184,7 @@ document.addEventListener('DOMContentLoaded', () => {
         location.reload();
     };
 
-    cargarDatos('nada'); // Carga historial en silencio
+    cargarDatos('nada'); 
 });
 
 window.prepararEdicion = (id, nombre, monto, fecha, tipo) => {
