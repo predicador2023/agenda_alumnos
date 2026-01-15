@@ -47,7 +47,7 @@
                 <form id="form-alumno">
                     <div class="campo">
                         <label>Nombre y Apellido</label>
-                        <input type="text" id="nombre" placeholder="Ej: Juan Pérez" required>
+                        <input type="text" id="nombre" placeholder="inserta el nombre" required>
                     </div>
                     <div class="fila-doble">
                         <div class="campo">
@@ -78,29 +78,19 @@
         <section id="lista-section" class="hidden">
             <div class="lista-header-box">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                    <h2 style="font-size: 18px;">Listado</h2>
-                    <select id="filtro-mes-dinamico">
-                        <option value="todos">📋 Ver Todo</option>
-                        <option value="actual">📅 Enero 2026</option>
-                        <optgroup label="── HISTORIAL ──" id="grupo-meses-historial"></optgroup>
-                    </select>
+                    <h2 style="font-size: 18px;">Listado de Cobros</h2>
                 </div>
+                
                 <div class="table-container">
                     <table>
-                        <thead>
-                            <tr>
-                                <th>Alumno</th>
-                                <th style="text-align: right;">Monto</th>
-                                <th>Acc.</th>
-                            </tr>
-                        </thead>
                         <tbody id="tabla-ingresos"></tbody>
                     </table>
                 </div>
+                
                 <div id="mensaje-vacio" class="hidden"></div>
-                <div class="footer-lista-resumen">
-                    <p id="resultado-resumen" style="font-weight: 800; font-size: 18px; text-align: right; color: #1a7f3b;">Total: $0,00</p>
-                    <button class="btn-volver" onclick="location.reload()">🔙 Volver</button>
+                
+                <div class="footer-lista-resumen" style="margin-top: 20px; text-align: center;">
+                    <button class="btn-volver" onclick="location.reload()" style="width: 100%;">🔙 Volver al Inicio</button>
                 </div>
             </div>
         </section>
