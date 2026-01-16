@@ -28,12 +28,6 @@
 
             <div class="card-resumen">
                 <h2>Resumen de ingresos</h2>
-                <div id="visor-total-rapido" class="hidden">
-                    <div class="visor-verde-box anim-pulse">
-                        <small>TOTAL MES ACTUAL</small>
-                        <h2 id="monto-total-dinamico"></h2>
-                    </div>
-                </div>
                 <div class="grid-botones-resumen">
                     <button id="btn-mes-actual-inicio" class="btn-sub-resumen">Ver mes actual</button>
                     <button id="btn-historial-inicio" class="btn-sub-resumen">Meses anteriores</button>
@@ -81,6 +75,13 @@
                     <h2 style="font-size: 18px;">Listado de Cobros</h2>
                 </div>
                 
+                <div id="visor-total-rapido" class="hidden" style="margin-bottom: 20px;">
+                    <div class="visor-verde-box anim-pulse">
+                        <small>TOTAL MES ACTUAL</small>
+                        <h2 id="monto-total-dinamico">$ 0</h2>
+                    </div>
+                </div>
+                
                 <div class="table-container">
                     <table>
                         <tbody id="tabla-ingresos"></tbody>
@@ -98,12 +99,7 @@
         <section id="historial-section" class="hidden">
             <div class="lista-header-box">
                 <h2 style="text-align: center; margin-bottom: 5px;">Historial</h2>
-                <p style="text-align: center; color: gray; font-size: 14px; margin-bottom: 20px;">
-                    Tocá un año para ver los meses:
-                </p>
-                
                 <div id="contenedor-historial-desplegable"></div>
-
                 <div style="margin-top: 20px;">
                     <button class="btn-volver" onclick="location.reload()" style="width: 100%;">🔙 Volver al Inicio</button>
                 </div>
