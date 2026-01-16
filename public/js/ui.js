@@ -86,7 +86,10 @@ export function dibujarHistorial(agrupados, callback) {
             
             // Mostramos el identificador del mes (ej: 2025-12)
             btn.innerHTML = `
-                <span>📅</span> <strong>${mesAnio}</strong>
+                <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                  <span>📅</span>
+                  <strong>${mesAnio}</strong>
+                </div>
                 <span>Ver registros de este período</span>
             `;
             
