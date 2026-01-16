@@ -4,7 +4,7 @@ import * as ui from './ui.js';
 
 document.addEventListener('DOMContentLoaded', () => {
 
-    // --- BLOQUE 1: LOS QUE YA FUNCIONAN (NO SE TOCAN) ---
+    // --- BLOQUE 1: NAVEGACIÓN Y LISTA ---
     document.getElementById('btn-ingresar').onclick = () => ui.irA('form-section');
     
     document.getElementById('btn-ver-lista').onclick = async () => {
@@ -58,14 +58,16 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
-    // --- BLOQUE 4: GUARDAR NUEVO REGISTRO (EL CAMBIO SOLICITADO) ---
+    // --- BLOQUE 4: GUARDAR O ACTUALIZAR REGISTRO ---
     const formAlumno = document.getElementById('form-alumno');
     if (formAlumno) {
         formAlumno.onsubmit = async (e) => {
             e.preventDefault(); 
 
-            // Recolectamos datos del formulario
-            const nuevoAlumno = {
+            // Verificamos si hay un ID guardado (esto nos dice si es EDICIÓN)
+            const editId = formAlumno.dataset.editId;
+
+            const datosAlumno = {
                 nombre_alumno: document.getElementById('nombre').value,
                 tipo: document.getElementById('tipo').value,
                 monto: parseFloat(document.getElementById('monto').value),
@@ -73,13 +75,20 @@ document.addEventListener('DOMContentLoaded', () => {
             };
 
             try {
-                // Enviamos a tu función guardarIngreso de api.js
-                const exito = await api.guardarIngreso(nuevoAlumno);
+                // Si editId tiene valor, la API hará un UPDATE. Si es null, un INSERT.
+                const exito = await api.guardarIngreso(datosAlumno, editId);
 
                 if (exito) {
-                    alert("✅ Registro guardado con éxito");
+                    alert(editId ? "✅ Registro actualizado con éxito" : "✅ Registro guardado con éxito");
+                    
+                    // Limpiamos el rastro de la edición
+                    delete formAlumno.dataset.editId;
                     formAlumno.reset();
-                    // Recargamos para que impacte en el historial y el mes actual
+                    
+                    // Restauramos el botón a su estado original
+                    const btnGuardar = formAlumno.querySelector('button[type="submit"]');
+                    if (btnGuardar) btnGuardar.innerText = "Guardar Ingreso 💰";
+
                     location.reload(); 
                 } else {
                     alert("❌ No se pudo guardar. Revisa la consola.");
@@ -92,20 +101,45 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// --- CONEXIÓN PARA EL BOTÓN DE BORRAR ---
+// --- FUNCIONES GLOBALES (FUERA DEL DOM PARA QUE EL HTML LAS VEA) ---
+
 window.borrarRegistro = async (id) => {
-    // 1. Preguntamos al usuario
     if (confirm("¿Estás seguro de que querés borrar este registro?")) {
-        
-        // 2. Llamamos a la función de la API para borrar
         const exito = await api.eliminarIngreso(id);
-        
-        // 3. Si salió bien, avisamos y recargamos
         if (exito) {
             alert("✅ Registro eliminado");
             location.reload(); 
         } else {
             alert("❌ Error: No se pudo borrar de la base de datos.");
         }
+    }
+};
+
+window.prepararEdicion = async (id) => {
+    try {
+        const ingresos = await api.obtenerTodosLosIngresos();
+        const item = ingresos.find(ing => ing.id == id);
+
+        if (item) {
+            // 1. Cargamos los datos en los inputs
+            document.getElementById('nombre').value = item.nombre_alumno || item.nombre || '';
+            document.getElementById('monto').value = item.monto;
+            document.getElementById('fecha').value = item.fecha;
+            document.getElementById('tipo').value = item.tipo;
+            
+            // 2. IMPORTANTE: Guardamos el ID en el dataset del formulario
+            const form = document.getElementById('form-alumno');
+            form.dataset.editId = id;
+            
+            // 3. Llevamos al usuario a la pantalla del formulario
+            ui.irA('form-section');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            // 4. Cambiamos visualmente el botón
+            const btnGuardar = form.querySelector('button[type="submit"]');
+            if (btnGuardar) btnGuardar.innerText = "Actualizar Registro 💾";
+        }
+    } catch (error) {
+        console.error("Error al preparar la edición:", error);
     }
 };
