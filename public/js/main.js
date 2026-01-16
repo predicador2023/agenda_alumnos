@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     document.getElementById('btn-ver-lista').onclick = async () => {
         const datos = await api.obtenerTodosLosIngresos();
-        ui.llenarTabla(datos); // Aquí sí queremos la lista completa
+        ui.llenarTabla(datos); 
         ui.irA('lista-section');
         const visor = document.getElementById('visor-total-rapido');
         if (visor) visor.classList.add('hidden');
@@ -23,14 +23,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const datos = await api.obtenerTodosLosIngresos();
                 const total = logic.calcularTotalMesActual(datos);
                 
-                // 1. Preparamos el monto
                 ui.prepararMontoSinMostrar(total);
                 
-                // 2. Limpiamos la tabla para que NO se vea la lista
                 const tabla = document.getElementById('tabla-ingresos');
                 if (tabla) tabla.innerHTML = ""; 
                 
-                // 3. Mostramos la sección (que ahora tendrá el visor pero tabla vacía)
                 ui.mostrarSeccionMonto();
             } catch (error) {
                 console.error("Error en Mes Actual:", error);
@@ -38,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
-    // --- BLOQUE 3: HISTORIAL (EL QUE YA FUNCIONA) ---
+    // --- BLOQUE 3: HISTORIAL ---
     const btnHistorial = document.getElementById('btn-historial-inicio');
     if (btnHistorial) {
         btnHistorial.onclick = async () => {
@@ -57,6 +54,39 @@ document.addEventListener('DOMContentLoaded', () => {
                 ui.irA('historial-section');
             } catch (error) {
                 console.error("Error en Historial:", error);
+            }
+        };
+    }
+
+    // --- BLOQUE 4: GUARDAR NUEVO REGISTRO (EL CAMBIO SOLICITADO) ---
+    const formAlumno = document.getElementById('form-alumno');
+    if (formAlumno) {
+        formAlumno.onsubmit = async (e) => {
+            e.preventDefault(); 
+
+            // Recolectamos datos del formulario
+            const nuevoAlumno = {
+                nombre: document.getElementById('nombre').value,
+                tipo: document.getElementById('tipo').value,
+                monto: parseFloat(document.getElementById('monto').value),
+                fecha: document.getElementById('fecha').value
+            };
+
+            try {
+                // Enviamos a tu función guardarIngreso de api.js
+                const exito = await api.guardarIngreso(nuevoAlumno);
+
+                if (exito) {
+                    alert("✅ Registro guardado con éxito");
+                    formAlumno.reset();
+                    // Recargamos para que impacte en el historial y el mes actual
+                    location.reload(); 
+                } else {
+                    alert("❌ No se pudo guardar. Revisa la consola.");
+                }
+            } catch (err) {
+                console.error("Error al procesar el guardado:", err);
+                alert("Hubo un error en la comunicación con la base de datos.");
             }
         };
     }
