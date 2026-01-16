@@ -28,7 +28,7 @@ export async function guardarIngreso(datos, id = null) {
         const res = await fetch(url, { 
             method: method, 
             headers: HEADERS, 
-            body: JSON.stringify(datos) 
+            body: JSON.stringify([datos])
         });
         return res.ok;
     } catch (err) {

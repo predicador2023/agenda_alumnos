@@ -66,7 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Recolectamos datos del formulario
             const nuevoAlumno = {
-                nombre: document.getElementById('nombre').value,
+                nombre_alumno: document.getElementById('nombre').value,
                 tipo: document.getElementById('tipo').value,
                 monto: parseFloat(document.getElementById('monto').value),
                 fecha: document.getElementById('fecha').value
