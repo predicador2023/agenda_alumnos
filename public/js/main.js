@@ -91,3 +91,21 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 });
+
+// --- CONEXIÓN PARA EL BOTÓN DE BORRAR ---
+window.borrarRegistro = async (id) => {
+    // 1. Preguntamos al usuario
+    if (confirm("¿Estás seguro de que querés borrar este registro?")) {
+        
+        // 2. Llamamos a la función de la API para borrar
+        const exito = await api.eliminarIngreso(id);
+        
+        // 3. Si salió bien, avisamos y recargamos
+        if (exito) {
+            alert("✅ Registro eliminado");
+            location.reload(); 
+        } else {
+            alert("❌ Error: No se pudo borrar de la base de datos.");
+        }
+    }
+};

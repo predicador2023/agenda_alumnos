@@ -53,3 +53,4 @@ export async function eliminarIngreso(id) {
         return false;
     }
 }
+
