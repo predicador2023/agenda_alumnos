@@ -553,6 +553,44 @@ optgroup {
     background-color: #f8f9fa;
 }
 
+/* Clase base para botones de acción y control */
+.btn-moderno {
+    background-color: #2d3436; /* Un gris casi negro muy elegante */
+    color: #ffffff;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 12px; /* Bordes redondeados estilo app moderna */
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease; /* Transición suave */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px; /* Espacio entre el icono y el texto */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    text-transform: uppercase; /* Les da un toque más formal */
+    letter-spacing: 0.5px;
+}
+
+/* Efecto al pasar el mouse (para PC) */
+.btn-moderno:hover {
+    background-color: #000000;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Efecto al TOCAR (Feedback táctil fundamental) */
+.btn-moderno:active {
+    transform: scale(0.95); /* Se achica un poquito, efecto "pulsado" */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Color especial para el botón de Volver (opcional, un tono más suave) */
+.btn-volver {
+    background-color: #636e72;
+}
+
 /* --- 13. AJUSTE DE LA TABLA PARA 330PX (MONTOS) --- */
 @media screen and (max-width: 330px) {
     .monto-valor {
@@ -642,4 +680,77 @@ td:nth-child(3) {
     color: #a0aec0;
     display: block;
     margin-top: 2px;
+}
+
+/* --- AJUSTES FINALES DE CIERRE DE CICLO --- */
+/* --- AJUSTES DE FUERZA PARA CIERRE --- */
+
+/* Forzamos al botón de estadísticas a centrarse y tener aire */
+/* --- AJUSTE ESTILIZADO DE CIERRE --- */
+
+/* --- CIERRE DE CICLO: ESTILO REFINADO --- */
+
+/* --- BOTÓN ESTADÍSTICAS: VERSIÓN MINIMALISTA --- */
+/* EL BOTÓN QUE FINALMENTE OBEDECIÓ */
+/* Atacamos la clase específica que nos estaba bloqueando */
+/* Atacamos la clase real: btn-moderno */
+/* EL PUNTO JUSTO: Ni gigante, ni invisible */
+/* SIN ESPACIO = El mismo elemento tiene que tener la clase y el ID */
+/* EL ESTILO DEFINITIVO Y ÚNICO */
+#btn-ir-stats {
+    all: unset !important; /* Limpieza absoluta */
+    display: flex !important;
+    
+    /* COLORES: Fondo blanco/hueso y letras verde claro */
+    background-color: #f9f9f9 !important; 
+    color: #2ecc71 !important; 
+    border: 1.5px solid #2ecc71 !important;
+
+    /* TAMAÑO PEQUEÑO Y REFINADO */
+    width: 130px !important;
+    height: 30px !important;
+    margin: 20px auto !important; /* Lo centra y le da aire arriba/abajo */
+    border-radius: 6px !important;
+    
+    /* TEXTO (EL FOCO DEL CAMBIO) */
+    font-family: sans-serif !important;
+    font-size: 10px !important; /* Letra chica y elegante */
+    font-weight: 800 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    
+    /* ALINEACIÓN INTERNA */
+    justify-content: center !important;
+    align-items: center !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important; /* Para que sea suave al tocarlo */
+}
+.btn-moderno {
+    all: unset !important; /* Limpiamos para que no herede cosas raras */
+    display: flex !important;
+    
+    /* TAMAÑO EQUILIBRADO */
+    width: 140px !important;      /* Un poco más ancho que el anterior */
+    height: 34px !important;      /* Un poco más alto para que respire */
+    margin: 15px auto !important; 
+    
+    /* LETRA LEGIBLE PERO CHICA */
+    font-size: 10px !important;   /* Subimos de 8px a 10px */
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    color: #ffffff !important;
+    background-color: #2d3436 !important; /* El gris oscuro elegante */
+    
+    /* FORMA */
+    justify-content: center !important;
+    align-items: center !important;
+    border-radius: 6px !important;
+    cursor: pointer !important;
+    text-align: center !important;
+}
+/* Para que el título de Análisis Semanal no quede pegado al gráfico */
+#seccion-estadisticas h2 {
+    text-align: center;
+    margin-bottom: 10px !important;
 }
