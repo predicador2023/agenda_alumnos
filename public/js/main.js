@@ -58,6 +58,30 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
+    // --- Lógica del Botón Estadísticas ---
+const btnStats = document.getElementById('btn-stats-inicio');
+
+if (btnStats) {
+    btnStats.onclick = async () => {
+        // 1. Cambiamos de pantalla
+        ui.irA('stats-section');
+        
+        // 2. Traemos todos los datos de Supabase
+        const todosLosDatos = await api.obtenerTodosLosIngresos();
+        console.log("Datos totales recibidos:", todosLosDatos.length);
+        
+        // 3. Filtramos solo los de este mes (Enero 2026)
+        const mesActual = logic.obtenerMesActualFormato();
+        const datosMes = logic.filtrarPorMesEspecifico(todosLosDatos, mesActual);
+        console.log("Datos de este mes (Enero):", datosMes.length);
+        
+        // 4. Usamos la función nueva de logic.js para agrupar por semanas
+        const datosProcesados = logic.prepararDatosGraficoSemanal(datosMes);
+        
+        // 5. Le mandamos los datos a la UI para que dibuje el gráfico
+        ui.dibujarGraficoSemanal(datosProcesados);
+    };
+}
     // --- BLOQUE 4: GUARDAR O ACTUALIZAR REGISTRO ---
     const formAlumno = document.getElementById('form-alumno');
     if (formAlumno) {
@@ -143,3 +167,12 @@ window.prepararEdicion = async (id) => {
         console.error("Error al preparar la edición:", error);
     }
 };
+ // Agregá esto al final de main.js
+const btnVolverStats = document.getElementById('btn-volver-stats');
+
+if (btnVolverStats) {
+    btnVolverStats.onclick = () => {
+        // ui.irA ya sabe cómo ocultar la estadística y mostrar el inicio
+        ui.irA('menu-principal'); 
+    };
+}

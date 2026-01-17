@@ -31,6 +31,7 @@
                 <div class="grid-botones-resumen">
                     <button id="btn-mes-actual-inicio" class="btn-sub-resumen">Ver mes actual</button>
                     <button id="btn-historial-inicio" class="btn-sub-resumen">Meses anteriores</button>
+                    <button id="btn-stats-inicio" class="btn-menu">Estadísticas Gráficas 📊</button>
                 </div>
             </div>
         </section>
@@ -106,8 +107,29 @@
             </div>
         </section>
 
+  <section id="stats-section" class="hidden section">
+    <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px;">
+        <h2 style="margin: 0;">Análisis Semanal 📊</h2>
+        <button id="btn-volver-stats" class="btn-menu" style="width: auto; padding: 10px 20px; background: #666;">Volver</button>
+    </div>
+
+    <div class="card-stats" style="background: white; margin: 15px; padding: 20px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+        <p style="text-align: center; color: #555; font-weight: bold;">Ingresos: Lunes a Sábado</p>
+        
+        <canvas id="graficoSemanal" style="max-height: 400px;"></canvas>
+    </div>
+
+    <div id="stats-info" style="padding: 15px; text-align: center; color: #444;">
+        </div>
+  </section>
+
     </main>
 
+    <script src="https://unpkg.com/chart.js@4.4.1/dist/chart.umd.js"></script>
+
+    <script type="module" src="js/api.js"></script>
+    <script type="module" src="js/logic.js"></script>
+    <script type="module" src="js/ui.js"></script>
     <script type="module" src="js/main.js"></script>
 </body>
 </html>

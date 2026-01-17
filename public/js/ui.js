@@ -98,3 +98,80 @@ export function dibujarHistorial(agrupados, callback) {
         });
     });
 }
+
+// Variable global para poder destruir el gráfico anterior antes de crear uno nuevo
+let instanceGrafico = null;
+
+export const dibujarGraficoSemanal = (datosSemanales) => {
+    const canvas = document.getElementById('graficoSemanal');
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
+
+    if (instanceGrafico) {
+        instanceGrafico.destroy();
+    }
+
+    instanceGrafico = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'],
+            datasets: [
+                {
+                    label: 'Semana 1',
+                    data: datosSemanales['Semana 1'],
+                    borderColor: '#3498db', // Azul
+                    backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                    tension: 0.3,
+                    fill: true,
+                    borderWidth: 3
+                },
+                {
+                    label: 'Semana 2',
+                    data: datosSemanales['Semana 2'],
+                    borderColor: '#2ecc71', // Verde
+                    backgroundColor: 'rgba(46, 204, 113, 0.1)',
+                    tension: 0.3,
+                    fill: true,
+                    borderWidth: 3
+                },
+                {
+                    label: 'Semana 3',
+                    data: datosSemanales['Semana 3'],
+                    borderColor: '#e67e22', // Naranja
+                    backgroundColor: 'rgba(230, 126, 34, 0.1)',
+                    tension: 0.3,
+                    fill: true,
+                    borderWidth: 3
+                },
+                {
+                    label: 'Semana 4',
+                    data: datosSemanales['Semana 4'],
+                    borderColor: '#9b59b6', // Violeta
+                    backgroundColor: 'rgba(155, 89, 182, 0.1)',
+                    tension: 0.3,
+                    fill: true,
+                    borderWidth: 3
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false, // Permite que use mejor el espacio
+            plugins: {
+                legend: { 
+                    position: 'bottom',
+                    labels: { boxWidth: 12, padding: 20 }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: (value) => '$' + value.toLocaleString()
+                    }
+                }
+            }
+        }
+    });
+};
